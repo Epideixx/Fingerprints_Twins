@@ -206,7 +206,7 @@ def eval_correlations(corr_MZ, corr_DZ, corr_NT, corr_only_NT, save_csv = None):
 
     # Save all the details
     if save_csv :
-        df = pd.DataFrame({"Autocorr_MZ" : pd.Series(autocorr_MZ), "Autocorr_MZ" : pd.Series(autocorr_DZ), "Autocorr_MZ" : pd.Series(autocorr_NT) , "Crosscorr MZ" : pd.Series(cross_corr_MZ), "Crosscorr DZ" : pd.Series(cross_corr_DZ), "Crosscorr NT" : pd.Series(cross_corr_NT)})
+        df = pd.DataFrame({"Autocorr_MZ" : pd.Series(autocorr_MZ), "Autocorr_DZ" : pd.Series(autocorr_DZ), "Autocorr_NT" : pd.Series(autocorr_NT) , "Crosscorr MZ" : pd.Series(cross_corr_MZ), "Crosscorr DZ" : pd.Series(cross_corr_DZ), "Crosscorr NT" : pd.Series(cross_corr_NT)})
         save_csv = save_csv + ".csv"
         df.to_csv(save_csv)
 
@@ -220,6 +220,10 @@ def eval_correlations(corr_MZ, corr_DZ, corr_NT, corr_only_NT, save_csv = None):
     return autocorr_moy, cross_corr_MZ_moy, cross_corr_DZ_moy, cross_corr_NT_moy, autocorr_std, cross_corr_MZ_std, cross_corr_DZ_std, cross_corr_NT_std
 
 # ---   MAIN    ---
+
+df_final = pd.DataFrame()
+save_final = "All_correlation_every_freq.csv"
+save_final = os.path.join(FOLDER_RESULTS, save_final)
 
 for i in range(1, 4):
     for j in range(1, 4):
@@ -342,3 +346,25 @@ for i in range(1, 4):
             save_path = "Autocorr_Crosscorr_avg_std_per_freq_band.csv"
             save_path = os.path.join(folder_result, save_path)
             df.to_csv(save_path, index = True, index_label="Frequencies_Band")
+
+            
+            # Finally, we merge all the data collected for every band in one dataframe
+
+            df_join = pd.DataFrame()
+            for band in bands_names:
+                name = "All_correlations_per_class_band_" + band + ".csv"
+                name = os.path.join(folder_result, name)
+                df = pd.read_csv(name, index_col=0)
+                new_columns_map = {col_name : col_name + "_" + band for col_name in df.columns}
+                df.rename(columns=new_columns_map, inplace=True)
+                df_join = pd.concat([df_join, df], axis = 1)
+
+            save_path = "All_correlations_per_class_band_merge.csv"
+            save_path = os.path.join(folder_result, save_path)
+            df_join.to_csv(save_path)            
+
+            # And to finish we merge that to the final df containing all the data
+            if i < j : # Else results appear twice
+                df_final = pd.concat([df_final, df_join], ignore_index = True, sort = False)
+
+df_final.to_csv(save_final)
