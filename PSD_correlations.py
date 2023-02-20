@@ -202,7 +202,7 @@ def eval_correlations(corr_MZ, corr_DZ, corr_NT, corr_only_NT, save_csv = None):
     # Cross correlation
     cross_corr_MZ = np.concatenate([[corr_MZ.to_numpy()[i, i+1], corr_MZ.to_numpy()[i+1, i]] for i in range(0, len(corr_MZ), 2)])
     cross_corr_DZ = np.concatenate([[corr_DZ.to_numpy()[i, i+1], corr_DZ.to_numpy()[i+1, i]] for i in range(0, len(corr_DZ), 2)])
-    cross_corr_NT = np.concatenate([np.concatenate([corr_NT.to_numpy()[i, :i], corr_NT.to_numpy()[i, i+1:]]) for i in range(0, len(corr_NT))]) 
+    cross_corr_NT = np.concatenate([corr_NT.drop(columns = ["NotTwin" + str(i)]).iloc[i-1].to_numpy() for i in range(1, len(ids_NT) + 1)])
 
     # Save all the details
     if save_csv :
