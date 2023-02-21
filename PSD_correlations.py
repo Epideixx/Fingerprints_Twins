@@ -18,7 +18,7 @@ import os
 import re
 import numpy as np
 import pandas as pd
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, zscore
 from tqdm import tqdm
 
 # To plot
@@ -248,6 +248,11 @@ for i in range(1, 4):
             save_path = os.path.join(folder_result, save_path)
             corr_subjects = corr_multi_subjects(record_A, record_B, save_plot=save_path, save_csv=save_path)
 
+            # Compute Z-Score
+            save_path = "Z_score_every_subject.csv"
+            save_path = os.path.join(folder_result, save_path)
+            df_zcore = pd.DataFrame(np.array([corr_subjects.index, zscore(corr_subjects.to_numpy().diagonal())]).T, columns = ["ID", "Z_score"]).set_index("ID")
+            df_zcore.to_csv(save_path, index="ID")
 
             # Correlations between the MZ twins
 
