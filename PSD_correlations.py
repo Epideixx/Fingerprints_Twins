@@ -309,7 +309,7 @@ for i in range(1, 4):
 
             for k, band in tqdm(enumerate(bands), total = len(bands)) :
 
-                columns_band_freq = [c for c in record_A.columns if float(re.search("[0-9]+\.[0-9]*", c).group(0)) >= band[0] and float(re.search("[0-9]+\.[0-9]*", c).group(0)) <= band[1]]
+                columns_band_freq = [c for c in record_A.columns if float(re.search("[0-9]+\.[0-9]*", c).group(0)) >= band[0] and float(re.search("[0-9]+\.[0-9]*", c).group(0)) < band[1]]
                 record_A_band_freq = record_A[columns_band_freq]
                 record_B_band_freq = record_B[columns_band_freq]
 
