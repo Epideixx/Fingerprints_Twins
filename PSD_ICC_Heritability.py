@@ -187,6 +187,7 @@ if not(os.path.exists(save_file)):
     zscore_3_MZ = zscore(record_3_MZ, axis = 1)
 
     icc_MZ = np.zeros(zscore_1_MZ.shape[1])
+    icc_MZ_sub = np.zeros((9, zscore_1_MZ.shape[1]))
 
     n_subs = len(record_1_MZ)*9 # Number of pair of Twins !
     n_feats = int(148*300)
@@ -205,6 +206,9 @@ if not(os.path.exists(save_file)):
         df7 = pd.DataFrame(np.array([[zscore_3_MZ.iloc[k][feature], zscore_1_MZ.iloc[k+1][feature]] for k in range(0, len(record_1_MZ), 2)]))
         df8 = pd.DataFrame(np.array([[zscore_2_MZ.iloc[k][feature], zscore_3_MZ.iloc[k+1][feature]] for k in range(0, len(record_1_MZ), 2)]))
         df9 = pd.DataFrame(np.array([[zscore_3_MZ.iloc[k][feature], zscore_2_MZ.iloc[k+1][feature]] for k in range(0, len(record_1_MZ), 2)]))
+
+        for j, df_j in enumerate([df1, df2, df3, df4, df5, df6, df7, df8, df9]):
+            icc_MZ_sub[j][i] = compute_icc(df_j, n = len(record_1_MZ), k = n_measurements)
         df = pd.concat([df1, df2, df3, df4, df5, df6, df7, df8, df9], axis = 0).rename(columns={0:"Twin A", 1: "Twin B"})
         icc_MZ[i] = compute_icc(df, n = n_subs, k = n_measurements)
 
@@ -212,7 +216,14 @@ if not(os.path.exists(save_file)):
     icc_MZ = pd.DataFrame(icc_MZ, columns=freqs, index=list_ROI)
     icc_MZ.to_csv(save_file, index_label="ROI")
 
-# MZ Correlation, using ICC
+    for j in range(9):
+        save_file = "ICC_MZ_partial_" + str(j) + ".csv"
+        save_file = os.path.join(FOLDER_RESULTS, save_file)
+        icc_MZ = np.reshape(icc_MZ_sub[j], (n_ROI, n_freqs))
+        icc_MZ = pd.DataFrame(icc_MZ, columns=freqs, index=list_ROI)
+        icc_MZ.to_csv(save_file, index_label="ROI")
+
+# DZ Correlation, using ICC
 save_file = os.path.join(FOLDER_RESULTS, "ICC_DZ.csv")
 if not(os.path.exists(save_file)):
 
@@ -225,6 +236,7 @@ if not(os.path.exists(save_file)):
     zscore_3_DZ = zscore(record_3_DZ, axis = 1)
 
     icc_DZ = np.zeros(zscore_1_DZ.shape[1])
+    icc_DZ_sub = np.zeros((9, zscore_1_MZ.shape[1]))
 
     n_subs = len(record_1_DZ)*9 # Number of pair of Twins !
     n_feats = int(148*300)
@@ -243,12 +255,21 @@ if not(os.path.exists(save_file)):
         df7 = pd.DataFrame(np.array([[zscore_3_DZ.iloc[k][feature], zscore_1_DZ.iloc[k+1][feature]] for k in range(0, len(record_1_DZ), 2)]))
         df8 = pd.DataFrame(np.array([[zscore_2_DZ.iloc[k][feature], zscore_3_DZ.iloc[k+1][feature]] for k in range(0, len(record_1_DZ), 2)]))
         df9 = pd.DataFrame(np.array([[zscore_3_DZ.iloc[k][feature], zscore_2_DZ.iloc[k+1][feature]] for k in range(0, len(record_1_DZ), 2)]))
+        for j, df_j in enumerate([df1, df2, df3, df4, df5, df6, df7, df8, df9]):
+            icc_DZ_sub[j][i] = compute_icc(df_j, n = len(record_1_DZ), k = n_measurements)
         df = pd.concat([df1, df2, df3, df4, df5, df6, df7, df8, df9], axis = 0).rename(columns={0:"Twin A", 1: "Twin B"})
         icc_DZ[i] = compute_icc(df, n = n_subs, k = n_measurements)
 
     icc_DZ = np.reshape(icc_DZ, (n_ROI, n_freqs))
     icc_DZ = pd.DataFrame(icc_DZ, columns=freqs, index=list_ROI)
     icc_DZ.to_csv(save_file, index_label="ROI")
+
+    for j in range(9):
+        save_file = "ICC_DZ_partial_" + str(j) + ".csv"
+        save_file = os.path.join(FOLDER_RESULTS, save_file)
+        icc_DZ = np.reshape(icc_DZ_sub[j], (n_ROI, n_freqs))
+        icc_DZ = pd.DataFrame(icc_DZ, columns=freqs, index=list_ROI)
+        icc_DZ.to_csv(save_file, index_label="ROI")
 
 
 # Heritability
@@ -267,5 +288,42 @@ for ind, band in enumerate(bands):
 heritability_avg_per_band = heritability_avg_per_band[bands_names]
 heritability_avg_per_band["total_avg"] = np.mean(heritability_avg_per_band[bands_names], axis = 1)
 
-save_file = os.path.join(FOLDER_RESULTS, "Heritability_avg.csv")
+save_file = os.path.join(FOLDER_RESULTS, "Heritability_avg_per_band.csv")
 heritability_avg_per_band.to_csv(save_file, index_label="ROI")
+
+### COMPUTE HERITABILITY MEAN AND STD HERE !!!!
+icc_MZ = []
+icc_DZ = []
+
+for j in range(9):
+    save_file = "ICC_MZ_partial_" + str(j) + ".csv"
+    save_file = os.path.join(FOLDER_RESULTS, save_file)
+    icc_MZ.append(pd.read_csv(save_file, index_col="ROI"))
+
+    save_file = "ICC_DZ_partial_" + str(j) + ".csv"
+    save_file = os.path.join(FOLDER_RESULTS, save_file)
+    icc_DZ.append(pd.read_csv(save_file, index_col="ROI"))
+
+heritability = 2*(np.array(icc_MZ) - np.array(icc_DZ))
+
+heritability_mean = pd.DataFrame(np.mean(heritability, axis = 0), columns=freqs, index=list_ROI)
+heritability_std = pd.DataFrame(np.std(heritability, axis = 0), columns=freqs, index=list_ROI)
+
+save_file = os.path.join(FOLDER_RESULTS, "heritability_mean.csv")
+heritability_mean.to_csv(save_file, index_label="ROI")
+
+save_file = os.path.join(FOLDER_RESULTS, "heritability_std.csv")
+heritability_std.to_csv(save_file, index_label="ROI")
+
+heritability_avg_per_band = heritability_mean.copy()
+for ind, band in enumerate(bands):
+    cols = [c for c in heritability_mean.columns if float(c) >= band[0] and float(c) < band[1]]
+    heritability_avg_per_band[bands_names[ind]] = np.mean(heritability_mean[cols], axis = 1)
+
+heritability_avg_per_band = heritability_avg_per_band[bands_names]
+heritability_avg_per_band["total_avg"] = np.mean(heritability_avg_per_band[bands_names], axis = 1)
+
+save_file = os.path.join(FOLDER_RESULTS, "Heritability_mean_avg_per_band.csv")
+heritability_avg_per_band.to_csv(save_file, index_label="ROI")
+
+
