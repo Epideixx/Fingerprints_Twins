@@ -62,7 +62,7 @@ corr %>%
   theme(legend.position = "none")+
   facet_wrap(~corrtype, scale = "free_x")+
   xlab("Correlation")+
-  ylab("Twins Type")
+  ylab("Twin Category")
 
 
 ####### PLOT CORRELATIONS PER ROI ########
@@ -74,15 +74,15 @@ corr_final <- read.csv(file = 'Neuro_McGill/Fingerprints_Twins/Destrieux_atlas.c
 
 corr_MZ <- corr_final
 corr_MZ$corr <- corr$Crosscorr.MZ
-corr_MZ$typeTwin <- "MZ"
+corr_MZ$typeTwin <- "Crosscorrelation MZ"
 
 corr_DZ <- corr_final
 corr_DZ$corr <- corr$Crosscorr.DZ
-corr_DZ$typeTwin <- "DZ"
+corr_DZ$typeTwin <- "Crosscorrelation DZ"
 
 corr_final <- rbind(corr_MZ, corr_DZ)
 
-corr_final$typeTwin <- factor(corr_final$typeTwin, levels = c("MZ", "DZ"))
+corr_final$typeTwin <- factor(corr_final$typeTwin, levels = c("Crosscorrelation MZ", "Crosscorrelation DZ"))
 
 corr_final %>%
   group_by(typeTwin) %>%
@@ -169,7 +169,7 @@ ggsave('Neuro_McGill/Fingerprints_Twins/Results/Figures/ICC_mean_band_continuous
 
 ###### Heritability #######
 
-Heritability <- read.csv(file = 'Neuro_McGill/Fingerprints_Twins/Results/ICC_and_Heritability/Heritability_avg.csv')
+Heritability <- read.csv(file = 'Neuro_McGill/Fingerprints_Twins/Results/ICC_and_Heritability/Heritability_mean_avg_per_band.csv')
 Heritability_final <- read.csv(file = 'Neuro_McGill/Fingerprints_Twins/Destrieux_atlas.csv')
 
 Heritability_final_DELTA <- Heritability_final
