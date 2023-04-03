@@ -5,10 +5,14 @@ All_Data.*
 
 # Useless on GitHub
 ARCHIVE
+Papers
 *.pptx
-*.pdf
+Fingerprints.pdf
+HCP_Manual.pdf
+Poli_J.pdf
 *.docx
 *test*
+fingerprints_env
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
