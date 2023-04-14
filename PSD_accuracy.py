@@ -31,8 +31,8 @@ GAMMA = (30.0, 50.0)
 HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
-DATA_PATH = "Data"
-FOLDER_RESULTS = "Results/PSD_accuracy"
+DATA_PATH = "New_Data"
+FOLDER_RESULTS = "Results_Log_Destrieux/PSD_accuracy"
 N_RESAMPLE = 1000
 
 # ---   DEPENDENCIES   ---
@@ -51,9 +51,15 @@ from matplotlib import pyplot as plt
 
 # ---   IMPORT DATA   ---
 
-record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1.csv"), index_col="Subject_ID")
-record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2.csv"), index_col="Subject_ID")
-record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3.csv"), index_col="Subject_ID")
+record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Destrieux.csv"), index_col="Subject_ID")
+record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Destrieux.csv"), index_col="Subject_ID")
+record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Destrieux.csv"), index_col="Subject_ID")
+
+# Log the data
+
+record_1 = np.log(record_1)
+record_2 = np.log(record_2)
+record_3 = np.log(record_3)
 
 # ---   USEFULL ITEMS   ---
 
@@ -214,7 +220,7 @@ def eval_accuracy(corr_df):
 # ---   MAIN    ---
 
 df_final = pd.DataFrame()
-save_final = "All_correlation_every_freq.csv"
+save_final = "All_accuracies_every_freq.csv"
 save_final = os.path.join(FOLDER_RESULTS, save_final)
 
 for i in range(1, 4):

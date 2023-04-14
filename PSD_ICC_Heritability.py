@@ -9,8 +9,8 @@ GAMMA = (30.0, 50.0)
 HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
-DATA_PATH = "Data"
-FOLDER_RESULTS = "Results/ICC_and_Heritability"
+DATA_PATH = "New_Data"
+FOLDER_RESULTS = "Results_Log_Destrieux/ICC_and_Heritability"
 N_RESAMPLE = 1000
 
 # ---   DEPENDENCIES   ---
@@ -29,9 +29,15 @@ from matplotlib import pyplot as plt
 
 # ---   IMPORT DATA   ---
 
-record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1.csv"), index_col="Subject_ID")
-record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2.csv"), index_col="Subject_ID")
-record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3.csv"), index_col="Subject_ID")
+record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Destrieux.csv"), index_col="Subject_ID")
+record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Destrieux.csv"), index_col="Subject_ID")
+record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Destrieux.csv"), index_col="Subject_ID")
+
+# Log the data
+
+record_1 = np.log(record_1)
+record_2 = np.log(record_2)
+record_3 = np.log(record_3)
 
 # ---   USEFULL ITEMS   ---
 
