@@ -10,8 +10,11 @@ HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
 DATA_PATH = "New_Data"
-FOLDER_RESULTS = "Results_Log_Destrieux/ICC_and_Heritability"
+FOLDER_RESULTS = "Results_Log_Schaefer/ICC_and_Heritability"
 N_RESAMPLE = 1000
+
+NB_ROI = 200
+NB_FREQ = 301
 
 # ---   DEPENDENCIES   ---
 
@@ -29,9 +32,9 @@ from matplotlib import pyplot as plt
 
 # ---   IMPORT DATA   ---
 
-record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Destrieux.csv"), index_col="Subject_ID")
-record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Destrieux.csv"), index_col="Subject_ID")
-record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Destrieux.csv"), index_col="Subject_ID")
+record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Schaefer.csv"), index_col="Subject_ID")
+record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Schaefer.csv"), index_col="Subject_ID")
+record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Schaefer.csv"), index_col="Subject_ID")
 
 # Log the data
 
@@ -196,7 +199,7 @@ if not(os.path.exists(save_file)):
     icc_MZ_sub = np.zeros((9, zscore_1_MZ.shape[1]))
 
     n_subs = len(record_1_MZ)*9 # Number of pair of Twins !
-    n_feats = int(148*300)
+    n_feats = int(NB_ROI*NB_FREQ)
     n_measurements = 2
 
     n = n_subs
@@ -245,7 +248,7 @@ if not(os.path.exists(save_file)):
     icc_DZ_sub = np.zeros((9, zscore_1_MZ.shape[1]))
 
     n_subs = len(record_1_DZ)*9 # Number of pair of Twins !
-    n_feats = int(148*300)
+    n_feats = int(NB_ROI*NB_FREQ)
     n_measurements = 2
 
     n = n_subs

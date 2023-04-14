@@ -10,7 +10,7 @@ HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
 DATA_PATH = "New_Data"
-FOLDER_RESULTS = "Results_Log_Destrieux/PSD_correlations"
+FOLDER_RESULTS = "Results_Log_Schaefer/PSD_correlations"
 
 # ---   DEPENDENCIES   ---
 
@@ -28,9 +28,9 @@ from matplotlib import pyplot as plt
 
 # ---   IMPORT DATA   ---
 
-record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Destrieux.csv"), index_col="Subject_ID")
-record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Destrieux.csv"), index_col="Subject_ID")
-record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Destrieux.csv"), index_col="Subject_ID")
+record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Schaefer.csv"), index_col="Subject_ID")
+record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Schaefer.csv"), index_col="Subject_ID")
+record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Schaefer.csv"), index_col="Subject_ID")
 
 # Log the data
 
