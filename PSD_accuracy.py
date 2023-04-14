@@ -1,3 +1,25 @@
+"""
+This Python script runs multiple identification processes (identification of the subject themselves, identification of the twin), for every pair of distinct datasets.
+For statistical analysis of the results, a bootstrap method is used, evaluating the acuracies 1000 times without replacement, using each time 90 % of the dataset.
+
+---  RETURNS  ---
+
+FILES :
+- FOLDER_RESULTS/Dataset_A_vs_Dataset_B/Accuracies_bootstrapp_FREQBAND.csv (with A and B two different datasets, and FREQBAND a frequency band)
+Columns = Accuracy correlation with themself, Accuracy identification MZ Twin, Accuracy identification DZ Twin
+Rows = Bootstrapp
+- FOLDER_RESULTS/Dataset_A_vs_Dataset_B/All_accuracies_bootstrapp_merge.csv
+Merging of all the frequency bands, along the columns
+- FOLDER_RESULTS/All_accuracies_every_freq.csv
+Merging of all the bootstrapped accuracies, creating a final file with all the accuracies for every frequency bands
+Columns = Accuracies per band (BROADBAND, THETA, DELTA, ... ) per type of relation (Auto, MZ Twin, DZ Twin)
+Rows = All the boostraps
+
+FIGURES :
+Nothing
+
+"""
+
 # ---   PARAMETERS   ---
 # Frequency bands
 BROADBAND = (0.0, 150.0)
