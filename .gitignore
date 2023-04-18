@@ -3,6 +3,7 @@ Data/
 new_Data/
 All_Data_RESTRICTED.csv
 All_Data.*
+ID_to_Name.csv
 
 # Useless on GitHub
 ARCHIVE
@@ -14,6 +15,9 @@ Poli_J.pdf
 *.docx
 *test*
 fingerprints_env
+.RData
+.Rhistory
+Results_Preprocess
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
