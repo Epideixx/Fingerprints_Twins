@@ -111,7 +111,13 @@ ids_MZ = [k for k, v in rename_twins.items() if "Twin_MZ" in v]
 ids_DZ = [k for k, v in rename_twins.items() if "Twin_DZ" in v]
 ids_NT = [k for k, v in rename_twins.items() if "NotTwin" in v]
 
-list_ROI = sorted(set([c.replace(re.search("_[0-9]+\.[0-9]*", c).group(0), "") for c in record_1.columns]))
+def f7(seq):
+    """ Remove duplicates of a list and preserve the order. """
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
+
+list_ROI = f7([c.replace(re.search("_[0-9]+\.[0-9]*", c).group(0), "") for c in record_1.columns])
 n_ROI = len(list_ROI)
 freqs = sorted(set([float(re.search("[0-9]+\.[0-9]*", c).group(0)) for c in record_1.columns]))
 n_freqs = len(freqs)
