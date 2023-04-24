@@ -13,11 +13,6 @@ library(cowplot)
 library(ggsegSchaefer)
 library(ggpubr)
 
-# Define the viridis color palette
-my_palette <- inferno(n = 4)
-
-discrete_map = inferno(n = 4)
-
 # --------------------------------------
 #         PLOT ACCURACIES
 # --------------------------------------
@@ -34,8 +29,7 @@ acc_order <- c("Autocorr", "Crosscorr MZ", "Crosscorr DZ")
 # Create the aesthetic boxplot
 ggplot(data, aes(x=factor(FreqBand, levels = freq_order), y=values, fill=factor(AccType, levels = acc_order))) + 
   geom_boxplot()+
-  scale_color_manual(values = my_palette, labels = c("Fingerprint accuracy", "MZ matching accuracy", "DZ matching accuracy")) +
-  scale_fill_manual(values = my_palette, labels = c("Fingerprint accuracy", "MZ matching accuracy", "DZ matching accuracy")) +
+  scale_fill_viridis_d(option = "viridis", labels = c("Fingerprint accuracy", "MZ matching accuracy", "DZ matching accuracy")) +
   labs(x = "Frequency Band", y = "Accuracy", color = "Accuracy Type", fill = "Accuracy Type") +
   theme_classic()
 
@@ -70,8 +64,8 @@ for (band in bands) {
     filter(FreqBand == band & TypeCorr == "Autocorr")
   
   p1 <- ggplot(auto_corr, aes(x = values, fill = TwinType)) +
-    geom_density(alpha = 0.4) +
-    scale_fill_manual(values = discrete_map[1:3]) +
+    geom_density(alpha = 0.55) +
+    scale_fill_viridis_d(option = "viridis") +
     xlab("Correlation") +
     ylab("Density") +
     ggtitle("Autocorrelation") +
@@ -81,8 +75,8 @@ for (band in bands) {
     filter(FreqBand == band & TypeCorr == "Crosscorr")
   
   p2 <- ggplot(cross_corr, aes(x = values, fill = TwinType)) +
-    geom_density(alpha = 0.4) +
-    scale_fill_manual(values = discrete_map[1:3]) +
+    geom_density(alpha = 0.55) +
+    scale_fill_viridis_d(option = "viridis") +
     xlab("Correlation") +
     ylab("Density") +
     ggtitle("Cross-correlation") +
@@ -129,13 +123,10 @@ data4plot %>%
   group_by(ind) %>% 
   brain_join(schaefer7_200) %>% 
   reposition_brain(hemi ~ side) %>% 
-  ggplot(aes(fill = values)) + 
+  ggplot(aes(fill =values)) + 
   geom_sf(show.legend = TRUE) + 
-  facet_wrap( ~ ind) +  
-  scale_fill_continuous_sequential(palette = 'Sunset', rev = FALSE, limits = c(0.4,1)) +  
-  scale_color_continuous_sequential(palette = 'Sunset', rev = FALSE, limits = c(0.4,1)) +
-  theme_void() + 
-  scale_color_manual('white')
+  facet_wrap( ~ ind) +  scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE, limits= c(0.4,1)) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE, limits= c(0.4,1)) +
+  theme_void() + scale_color_manual('white')
 
 # Save the narrowbands ICC plot as a pdf
 ggsave('Results_Log_Schaefer/Figures/ICC_narrowbands_Schaefer.pdf', device = "pdf")
