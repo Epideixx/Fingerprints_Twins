@@ -428,7 +428,7 @@ library(ggsegSchaefer)
 ## plot the Destrieux atlas
 #################################################################
 
-atlas= read.csv('Destrieux_atlas.csv')
+atlas= read.csv('new_Data/Destrieux_atlas.csv')
 
 ICC= read.csv('Results_Log_Destrieux/ICC_and_Heritability/ICC.csv', header = TRUE)
 ICC= ICC[-1]
