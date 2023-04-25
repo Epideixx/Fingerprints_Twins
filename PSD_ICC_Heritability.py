@@ -10,7 +10,7 @@ HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
 DATA_PATH = "New_Data"
-FOLDER_RESULTS = "Results_Log_Schaefer/ICC_and_Heritability"
+FOLDER_RESULTS = "Results_Log_DK/ICC_and_Heritability"
 N_RESAMPLE = 1000
 
 NB_ROI = 200
@@ -32,9 +32,9 @@ from matplotlib import pyplot as plt
 
 # ---   IMPORT DATA   ---
 
-record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Schaefer.csv"), index_col="Subject_ID")
-record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Schaefer.csv"), index_col="Subject_ID")
-record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Schaefer.csv"), index_col="Subject_ID")
+record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_DK.csv"), index_col="Subject_ID")
+record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_DK.csv"), index_col="Subject_ID")
+record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_DK.csv"), index_col="Subject_ID")
 
 # Log the data
 
@@ -47,7 +47,7 @@ record_3 = np.log(record_3)
 ### Annotate Data such that twins are linked ###
 
 # Import extra data (confidential)
-all_data_restricted_filename = "All_Data_RESTRICTED.csv"
+all_data_restricted_filename = "new_Data/All_Data_RESTRICTED.csv"
 all_data_restricted = pd.read_csv(all_data_restricted_filename)
 
 # Remove subjects who don't have a MEG recording
