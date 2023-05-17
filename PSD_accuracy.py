@@ -31,7 +31,7 @@ GAMMA = (30.0, 50.0)
 HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
-DATA_PATH = "New_Data"
+DATA_PATH = "new_Data"
 FOLDER_RESULTS = "Results_Log_DK/PSD_accuracy"
 N_RESAMPLE = 1000
 
@@ -92,6 +92,7 @@ for i in all_data_restricted.index:
             twins_dict[fam_ID] = {"type" : "NT", "subjects" : [subj_ID] } #NT = NoTwin
     else : 
         twins_dict[fam_ID]["subjects"].append(subj_ID)
+
 
 # Go from Subject ID to its row number in record and vice-versa 
 # (usefull when using the numpy conversion)
