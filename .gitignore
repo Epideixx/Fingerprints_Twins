@@ -18,6 +18,10 @@ fingerprints_env
 .RData
 .Rhistory
 Results_Preprocess
+Poster
+References*
+PSD_ICC_Bootstrap_No_second_Twin.py
+artifacts_vs_fingerprintable.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
