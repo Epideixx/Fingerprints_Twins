@@ -11,8 +11,9 @@ HIGH_GAMMA = (50.0, 150.0)
 # Parameters 
 DATA_PATH = "new_Data"
 FOLDER_RESULTS = "Results_Log_Schaefer_test"
-N_RESAMPLE = 1000
 ONLY_GT = True #Do not change the result here as we do not consider the relation between different participants
+WITHOUT_TWINS = True
+N_RESAMPLE = 10
 
 
 # ---   DEPENDENCIES   ---
@@ -188,33 +189,87 @@ def compute_icc(df, n = 89, k = 2):
 
 # ---   MAIN   ---
 
-save_file = os.path.join(FOLDER_RESULTS, "ICC.csv")
+if WITHOUT_TWINS :
 
-zscore_1 = zscore(record_1, axis = 1).rename(columns = {col : col + "_A" for col in record_1.columns})
-zscore_2 = zscore(record_2, axis = 1).rename(columns = {col : col + "_B" for col in record_1.columns})
-zscore_3 = zscore(record_3, axis = 1).rename(columns = {col : col + "_C" for col in record_1.columns})
+    iccs = []
 
-n_subs = len(record_1.index)
-n_measurements = 3
+    # Bootstrap
+    for k in tqdm(range(N_RESAMPLE), total=N_RESAMPLE): 
 
-icc = np.zeros(n_ROI * n_freqs)
-for i, feature in tqdm(enumerate(record_1.columns), total = len(record_1.columns)):
-    df = pd.concat([zscore_1[feature + "_A"], zscore_2[feature + "_B"], zscore_3[feature + "_C"]], axis = 1)
-    icc[i] = compute_icc(df, n = n_subs, k = n_measurements)
+        zscore_1 = zscore(record_1, axis = 1).rename(columns = {col : col + "_A" for col in record_1.columns})
+        zscore_2 = zscore(record_2, axis = 1).rename(columns = {col : col + "_B" for col in record_1.columns})
+        zscore_3 = zscore(record_3, axis = 1).rename(columns = {col : col + "_C" for col in record_1.columns})
 
-icc = np.reshape(icc, (n_ROI, n_freqs))
-icc = pd.DataFrame(icc, columns=freqs, index=list_ROI)
-save_file = os.path.join(FOLDER_RESULTS, "ICC.csv")
-icc.to_csv(save_file, index_label="ROI")
+        ids_to_keep = [list(twins_dict.values())[i]['subjects'][np.random.randint(len(list(twins_dict.values())[i]['subjects']))] for i in range(len(twins_dict.values()))]
+        mask = [True if id in ids_to_keep else False for id in zscore_1.index]
 
-icc_avg_per_band = icc.copy()
-for ind, band in enumerate(bands):
-    cols = [c for c in icc.columns if float(c) >= band[0] and float(c) < band[1]]
-    icc_avg_per_band[bands_names[ind]] = np.mean(icc[cols], axis = 1)
+        zscore_1 = zscore_1[mask]
+        zscore_2 = zscore_2[mask]
+        zscore_3 = zscore_3[mask]
 
-icc_avg_per_band = icc_avg_per_band[bands_names]
-icc_avg_per_band["total_avg"] = np.mean(icc_avg_per_band[bands_names], axis = 1)
+        print(zscore_1.shape[0])
 
-save_file = os.path.join(FOLDER_RESULTS, "ICC_avg_per_freq_band.csv")
-icc_avg_per_band.to_csv(save_file, index_label="ROI")
+        n_subs = zscore_1.shape[0]
+        n_measurements = 3
+
+        icc = np.zeros(n_ROI * n_freqs)
+        for i, feature in enumerate(record_1.columns):
+            df = pd.concat([zscore_1[feature + "_A"], zscore_2[feature + "_B"], zscore_3[feature + "_C"]], axis = 1)
+            icc[i] = compute_icc(df, n = n_subs, k = n_measurements)
+
+        icc = np.reshape(icc, (n_ROI, n_freqs))
+        icc = pd.DataFrame(icc, columns=freqs, index=list_ROI)
+
+        iccs.append(icc)
+
+    # Average all of the bootstraps
+    iccs = np.array(iccs)
+    icc = np.mean(iccs, axis = 0)
+
+    icc = pd.DataFrame(icc, columns=freqs, index=list_ROI)
+    save_file = os.path.join(FOLDER_RESULTS, "ICC_without_twins.csv")
+    icc.to_csv(save_file, index_label="ROI")
+
+
+    icc_avg_per_band = icc.copy()
+    for ind, band in enumerate(bands):
+        cols = [c for c in icc.columns if float(c) >= band[0] and float(c) < band[1]]
+        icc_avg_per_band[bands_names[ind]] = np.mean(icc[cols], axis = 1)
+
+    icc_avg_per_band = icc_avg_per_band[bands_names]
+    icc_avg_per_band["total_avg"] = np.mean(icc_avg_per_band[bands_names], axis = 1)
+
+    save_file = os.path.join(FOLDER_RESULTS, "ICC_without_twins_avg_per_band.csv")
+    icc_avg_per_band.to_csv(save_file, index_label="ROI")
+
+else :
+    save_file = os.path.join(FOLDER_RESULTS, "ICC.csv")
+
+    zscore_1 = zscore(record_1, axis = 1).rename(columns = {col : col + "_A" for col in record_1.columns})
+    zscore_2 = zscore(record_2, axis = 1).rename(columns = {col : col + "_B" for col in record_1.columns})
+    zscore_3 = zscore(record_3, axis = 1).rename(columns = {col : col + "_C" for col in record_1.columns})
+
+    n_subs = len(record_1.index)
+    n_measurements = 3
+
+    icc = np.zeros(n_ROI * n_freqs)
+    for i, feature in tqdm(enumerate(record_1.columns), total = len(record_1.columns)):
+        df = pd.concat([zscore_1[feature + "_A"], zscore_2[feature + "_B"], zscore_3[feature + "_C"]], axis = 1)
+        icc[i] = compute_icc(df, n = n_subs, k = n_measurements)
+
+    icc = np.reshape(icc, (n_ROI, n_freqs))
+    icc = pd.DataFrame(icc, columns=freqs, index=list_ROI)
+    save_file = os.path.join(FOLDER_RESULTS, "ICC.csv")
+    icc.to_csv(save_file, index_label="ROI")
+
+    icc_avg_per_band = icc.copy()
+    for ind, band in enumerate(bands):
+        cols = [c for c in icc.columns if float(c) >= band[0] and float(c) < band[1]]
+        icc_avg_per_band[bands_names[ind]] = np.mean(icc[cols], axis = 1)
+
+    icc_avg_per_band = icc_avg_per_band[bands_names]
+    icc_avg_per_band["total_avg"] = np.mean(icc_avg_per_band[bands_names], axis = 1)
+
+    save_file = os.path.join(FOLDER_RESULTS, "ICC_avg_per_freq_band.csv")
+    icc_avg_per_band.to_csv(save_file, index_label="ROI")
 
