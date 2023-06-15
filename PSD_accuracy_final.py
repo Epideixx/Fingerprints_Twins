@@ -50,10 +50,15 @@ import seaborn as sns
 sns.set_theme(style="white")
 from matplotlib import pyplot as plt
 
-# --- Create path where to save the results ---
+# --- PATH TO SAVE THE RESULTS ---
+
+if not os.path.exists(FOLDER_RESULTS):
+    os.mkdir(FOLDER_RESULTS)
 
 if ONLY_GT:
-    FOLDER_RESULTS += "_only_GT" 
+    FOLDER_RESULTS = os.path.join(FOLDER_RESULTS, "Only_GT")
+else :
+    FOLDER_RESULTS = os.path.join(FOLDER_RESULTS, "Include_SR")
 if not os.path.exists(FOLDER_RESULTS):
     os.mkdir(FOLDER_RESULTS)
 
