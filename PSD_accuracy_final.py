@@ -68,9 +68,9 @@ if not os.path.exists(FOLDER_RESULTS):
 
 # ---   IMPORT DATA   ---
 
-record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Schaefer_corrected.csv"), index_col="Subject_ID")
-record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Schaefer_corrected.csv"), index_col="Subject_ID")
-record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Schaefer_corrected.csv"), index_col="Subject_ID")
+record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Schaefer.csv"), index_col="Subject_ID")
+record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Schaefer.csv"), index_col="Subject_ID")
+record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Schaefer.csv"), index_col="Subject_ID")
 
 # Log the data
 
