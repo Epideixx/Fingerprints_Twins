@@ -6,7 +6,10 @@ All_Data.*
 ID_to_Name.csv
 
 # Useless on GitHub
+Pre_Print
+Plots_Jason
 ARCHIVE
+OLD
 Papers
 *.pptx
 Fingerprints.pdf
@@ -22,6 +25,11 @@ Poster
 References*
 PSD_ICC_Bootstrap_No_second_Twin.py
 artifacts_vs_fingerprintable.ipynb
+
+Verification
+
+Results*
+Regressed_Artifacts_Schaefer
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
