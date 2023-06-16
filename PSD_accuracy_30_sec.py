@@ -31,7 +31,7 @@ GAMMA = (30.0, 50.0)
 HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
-DATA_PATH = "new_Data/HCP_30_second"
+DATA_PATH = "Data/Schaefer_30_second"
 FOLDER_RESULTS = "Results_Log_Schaefer_test"
 ONLY_GT = True
 
@@ -91,7 +91,7 @@ print("Every PSD from session 3 has been loaded")
 ### Annotate Data such that twins are linked ###
 
 # Import extra data (confidential)
-all_data_restricted_filename = "new_Data/All_Data_RESTRICTED.csv"
+all_data_restricted_filename = "Data/All_Data_RESTRICTED.csv"
 all_data_restricted = pd.read_csv(all_data_restricted_filename)
 
 # Remove subjects who don't have a MEG recording
@@ -254,7 +254,7 @@ def eval_accuracy(corr_df):
 
 # ---   MAIN    ---
 
-## ACCURACY WITHIN A RECORD ###
+# ACCURACY WITHIN A RECORD ###
 
 
 group_of_records = {1 : record_1, 2 : record_2, 3 : record_3}
@@ -318,7 +318,7 @@ for id_record in range(1, 4):
     df_all_merge_within_records.append(df_final)
 
 all_acc = pd.concat(df_all_merge_within_records, axis = 0)
-all_acc.to_csv(folder_withing_record, "All_accuracies_every_freq.csv")
+all_acc.to_csv(os.path.join(folder_withing_record, "All_accuracies_every_freq.csv"))
 all_acc = pd.DataFrame(all_acc.stack(dropna = True)).reset_index().rename(columns={"level_1" : "columns", 0 : "values"})
 all_acc["columns"] = all_acc["columns"].apply(lambda x : re.split("_", x))
 all_acc["AccType"] = all_acc["columns"].apply(lambda x : x[0][4:])
@@ -365,6 +365,8 @@ for id_record_1 in range(1, 4):
                     bands = [BROADBAND, DELTA, THETA, ALPHA, BETA, GAMMA, HIGH_GAMMA]
                     bands_names = ["BROADBAND", "DELTA", "THETA", "ALPHA", "BETA", "GAMMA", "HIGH GAMMA"]
 
+                    df_every_freq = pd.DataFrame()
+
                     for k, band in tqdm(enumerate(bands), total = len(bands)):
 
                         df = []
@@ -393,7 +395,7 @@ for id_record_1 in range(1, 4):
             df_all_merge_between_records.append(df_final)
 
 all_acc = pd.concat(df_all_merge_between_records, axis = 0)
-all_acc.to_csv(folder_between_records, "All_accuracies_every_freq.csv")
+all_acc.to_csv(os.path.join(folder_between_records, "All_accuracies_every_freq.csv"))
 all_acc = pd.DataFrame(all_acc.stack(dropna = True)).reset_index().rename(columns={"level_1" : "columns", 0 : "values"})
 all_acc["columns"] = all_acc["columns"].apply(lambda x : re.split("_", x))
 all_acc["AccType"] = all_acc["columns"].apply(lambda x : x[0][4:])

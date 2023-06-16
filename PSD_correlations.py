@@ -13,7 +13,7 @@ GAMMA = (30.0, 50.0)
 HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
-DATA_PATH = "new_Data"
+DATA_PATH = "Data/Schaefer"
 FOLDER_RESULTS = "Results_Log_Schaefer_test"
 ONLY_GT = True
 
@@ -64,7 +64,7 @@ record_3 = np.log(record_3)
 ### Annotate Data such that twins are linked ###
 
 # Import extra data (confidential)
-all_data_restricted_filename = "new_Data/All_Data_RESTRICTED.csv"
+all_data_restricted_filename = "Data/All_Data_RESTRICTED.csv"
 all_data_restricted = pd.read_csv(all_data_restricted_filename)
 
 # Remove subjects who don't have a MEG recording
