@@ -1,12 +1,14 @@
 # Confidential Data (some of them to check)
-Data/
 new_Data/
 All_Data_RESTRICTED.csv
 All_Data.*
 ID_to_Name.csv
 
 # Useless on GitHub
+Pre_Print
+Plots_Jason
 ARCHIVE
+OLD
 Papers
 *.pptx
 Fingerprints.pdf
@@ -22,6 +24,18 @@ Poster
 References*
 PSD_ICC_Bootstrap_No_second_Twin.py
 artifacts_vs_fingerprintable.ipynb
+.DS_Store
+
+Verification
+
+Results*
+Regressed_Artifacts_Schaefer
+
+plot.ipynb
+plots_DK.R
+plots_Schaefer_30_sec.R
+neurochemicals_and_heritability_schaefer.ipynb
+temporary_file.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

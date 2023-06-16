@@ -31,9 +31,10 @@ GAMMA = (30.0, 50.0)
 HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
-DATA_PATH = "new_Data"
-FOLDER_RESULTS = "Results_Log_DK/PSD_accuracy"
+DATA_PATH = "Data/Schaefer"
+FOLDER_RESULTS = "Results_Log_Schaefer_test"
 N_RESAMPLE = 1000
+ONLY_GT = True
 
 # ---   DEPENDENCIES   ---
 
@@ -49,11 +50,27 @@ import seaborn as sns
 sns.set_theme(style="white")
 from matplotlib import pyplot as plt
 
+# --- PATH TO SAVE THE RESULTS ---
+
+if not os.path.exists(FOLDER_RESULTS):
+    os.mkdir(FOLDER_RESULTS)
+
+if ONLY_GT:
+    FOLDER_RESULTS = os.path.join(FOLDER_RESULTS, "Only_GT")
+else :
+    FOLDER_RESULTS = os.path.join(FOLDER_RESULTS, "Include_SR")
+if not os.path.exists(FOLDER_RESULTS):
+    os.mkdir(FOLDER_RESULTS)
+
+FOLDER_RESULTS = os.path.join(FOLDER_RESULTS, "PSD_Accuracy")
+if not os.path.exists(FOLDER_RESULTS):
+    os.mkdir(FOLDER_RESULTS)
+
 # ---   IMPORT DATA   ---
 
-record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_DK.csv"), index_col="Subject_ID")
-record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_DK.csv"), index_col="Subject_ID")
-record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_DK.csv"), index_col="Subject_ID")
+record_1 = pd.read_csv(os.path.join(DATA_PATH, "record_1_Schaefer.csv"), index_col="Subject_ID")
+record_2 = pd.read_csv(os.path.join(DATA_PATH, "record_2_Schaefer.csv"), index_col="Subject_ID")
+record_3 = pd.read_csv(os.path.join(DATA_PATH, "record_3_Schaefer.csv"), index_col="Subject_ID")
 
 # Log the data
 
@@ -66,7 +83,7 @@ record_3 = np.log(record_3)
 ### Annotate Data such that twins are linked ###
 
 # Import extra data (confidential)
-all_data_restricted_filename = "new_Data/All_Data_RESTRICTED.csv"
+all_data_restricted_filename = "Data/All_Data_RESTRICTED.csv"
 all_data_restricted = pd.read_csv(all_data_restricted_filename)
 
 # Remove subjects who don't have a MEG recording
@@ -77,21 +94,36 @@ print("Number of subjects with MEG :", len(all_data_restricted))
 
 # Stock individuals in a dictionnary identified by the Family ID, and giving the pairs of twins as well as the type of twins
 twins_dict = {} # Items in twins_dict => familly ID : {type_twins (MZ/DZ/NT), list_ID_subject_same_family}
-for i in all_data_restricted.index:
-    subj_ID = all_data_restricted.loc[i, "Subject"]
-    fam_ID = all_data_restricted.loc[i, "Family_ID"]
+if ONLY_GT :
+    for i in all_data_restricted.index:
+        subj_ID = all_data_restricted.loc[i, "Subject"]
+        fam_ID = all_data_restricted.loc[i, "Family_ID"]
 
-    if fam_ID not in twins_dict:
-        if len(all_data_restricted.loc[i, "ZygosityGT"]) >= 2:
-            twins_dict[fam_ID] = {"type" : all_data_restricted.loc[i, "ZygosityGT"], "subjects" : [subj_ID] }
-        elif all_data_restricted.loc[i, "ZygositySR"] in ["MZ", "DZ"]:
-            twins_dict[fam_ID] = {"type" : all_data_restricted.loc[i, "ZygositySR"], "subjects" : [subj_ID] }
-        elif all_data_restricted.loc[i, "ZygositySR"] == "NotMZ":
-            twins_dict[fam_ID] = {"type" : "DZ", "subjects" : [subj_ID] }
+        if fam_ID not in twins_dict:
+            if len(all_data_restricted.loc[i, "ZygosityGT"]) >= 2:
+                twins_dict[fam_ID] = {"type" : all_data_restricted.loc[i, "ZygosityGT"], "subjects" : [subj_ID] }
+            else : 
+                twins_dict[fam_ID] = {"type" : "NT", "subjects" : [subj_ID] } #NT = NoTwin
         else : 
-            twins_dict[fam_ID] = {"type" : "NT", "subjects" : [subj_ID] } #NT = NoTwin
-    else : 
-        twins_dict[fam_ID]["subjects"].append(subj_ID)
+            # We have only one pair of "normal" siblings and still not sure what they are
+            # So, if classified as Not twins, it means the relation is not certain
+            twins_dict[fam_ID]["subjects"].append(subj_ID)
+else :
+    for i in all_data_restricted.index:
+        subj_ID = all_data_restricted.loc[i, "Subject"]
+        fam_ID = all_data_restricted.loc[i, "Family_ID"]
+
+        if fam_ID not in twins_dict:
+            if len(all_data_restricted.loc[i, "ZygosityGT"]) >= 2:
+                twins_dict[fam_ID] = {"type" : all_data_restricted.loc[i, "ZygosityGT"], "subjects" : [subj_ID] }
+            elif all_data_restricted.loc[i, "ZygositySR"] in ["MZ", "DZ"]:
+                twins_dict[fam_ID] = {"type" : all_data_restricted.loc[i, "ZygositySR"], "subjects" : [subj_ID] }
+            elif all_data_restricted.loc[i, "ZygositySR"] == "NotMZ":
+                twins_dict[fam_ID] = {"type" : "DZ", "subjects" : [subj_ID] }
+            else : 
+                twins_dict[fam_ID] = {"type" : "NT", "subjects" : [subj_ID] } #NT = NoTwin
+        else : 
+            twins_dict[fam_ID]["subjects"].append(subj_ID)
 
 
 # Go from Subject ID to its row number in record and vice-versa 
@@ -136,10 +168,11 @@ ids_NT = [k for k, v in rename_twins.items() if "NotTwin" in v]
 nb_pair = len([pair["subjects"] for pair in list(twins_dict.values()) if len(pair["subjects"]) >= 2])
 nb_pair_MZ = len(ids_MZ)//2
 nb_pair_DZ = len(ids_DZ)//2
+nb_not_twins = len(ids_NT)
 nb_pair_not_twins = len([pair["subjects"] for pair in list(twins_dict.values()) if len(pair["subjects"]) >= 2 and pair["type"] == "NT"])
 
 print("The total number of participants is : ", len(all_data_restricted))
-print("We will work with {} pairs of siblings : {} pairs of MZ twins, {} pairs of DZ twins and {} pairs of normal siblings".format(nb_pair, nb_pair_MZ, nb_pair_DZ, nb_pair_not_twins))
+print("We will work with {} pairs of siblings : {} pairs of MZ twins, {} pairs of DZ twins and {} pairs of siblings with uncertain relation".format(nb_pair, nb_pair_MZ, nb_pair_DZ, nb_pair_not_twins))
 
 # ---   USEFULL FUNCTIONS   ---
 def corr_multi_subjects(dataset_1, dataset_2, plot = True, save_plot = None, save_csv = None):
@@ -188,14 +221,11 @@ def eval_accuracy(corr_df):
     corr_df_rows_MZ = corr_df[mask_MZ]
 
     second_best_corr = corr_df_rows_MZ.to_numpy().argsort(axis = 1)[:, ::-1][:, 1]
-    nb_true_pred = []
+    nb_true_pred = 0
     for i, num_column in enumerate(second_best_corr):
         match = re.search("Twin_MZ_[0-9]+(A|B)", corr_df_rows_MZ.index[i]).group(0)
         if corr_df.columns[num_column][:-1] == match[:-1] and match[-1] != corr_df.columns[num_column][-1]:
-            nb_true_pred.append(True)
-        else:
-            nb_true_pred.append(False)
-    nb_true_pred = np.count_nonzero(nb_true_pred)
+            nb_true_pred += 1
     cross_accuracy_MZ = nb_true_pred/len(corr_df_rows_MZ)
 
 
@@ -204,14 +234,11 @@ def eval_accuracy(corr_df):
     corr_df_rows_DZ = corr_df[mask_DZ]
 
     second_best_corr = corr_df_rows_DZ.to_numpy().argsort(axis = 1)[:, ::-1][:, 1]
-    nb_true_pred = []
+    nb_true_pred = 0
     for i, num_column in enumerate(second_best_corr):
         match = re.search("Twin_DZ_[0-9]+(A|B)", corr_df_rows_DZ.index[i]).group(0)
         if corr_df.columns[num_column][:-1] == match[:-1] and match[-1] != corr_df.columns[num_column][-1]:
-            nb_true_pred.append(True)
-        else:
-            nb_true_pred.append(False)
-    nb_true_pred = np.count_nonzero(nb_true_pred)
+            nb_true_pred += 1
     cross_accuracy_DZ = nb_true_pred/len(corr_df_rows_DZ)
     
     return auto_accuracy, cross_accuracy_MZ, cross_accuracy_DZ
@@ -226,90 +253,103 @@ save_final = os.path.join(FOLDER_RESULTS, save_final)
 
 for i in range(1, 4):
     for j in range(1, 4):
-        if i != j :
-            DATASET_1 = i 
-            DATASET_2 = j
+        DATASET_1 = i 
+        DATASET_2 = j
 
-            records = {1 : record_1, 2 : record_2, 3 : record_3}
-            record_A = records[DATASET_1]
-            record_B = records[DATASET_2]
+        records = {1 : record_1, 2 : record_2, 3 : record_3}
+        record_A = records[DATASET_1]
+        record_B = records[DATASET_2]
 
-            folder_result = "Dataset_" + str(i) + "_VS_Dataset" + str(j)
-            print("Current match : ", folder_result)
-            folder_result = os.path.join(FOLDER_RESULTS, folder_result)
+        folder_result = "Dataset_" + str(i) + "_VS_Dataset" + str(j)
+        print("Current match : ", folder_result)
+        folder_result = os.path.join(FOLDER_RESULTS, folder_result)
 
-            if not os.path.exists(folder_result):
-                os.mkdir(folder_result)
+        if not os.path.exists(folder_result):
+            os.mkdir(folder_result)
 
+        bands = [BROADBAND, DELTA, THETA, ALPHA, BETA, GAMMA, HIGH_GAMMA]
+        bands_names = ["BROADBAND", "DELTA", "THETA", "ALPHA", "BETA", "GAMMA", "HIGH GAMMA"]
 
-            bands = [BROADBAND, DELTA, THETA, ALPHA, BETA, GAMMA, HIGH_GAMMA]
-            bands_names = ["BROADBAND", "DELTA", "THETA", "ALPHA", "BETA", "GAMMA", "HIGH GAMMA"]
+        for k, band in tqdm(enumerate(bands), total = len(bands)):
 
-            for k, band in tqdm(enumerate(bands), total = len(bands)):
+            df = []
 
-                df = []
+            ### Compute correlation matrix
+            columns_band_freq = [c for c in record_A.columns if float(re.search("[0-9]+\.[0-9]*", c).group(0)) >= band[0] and float(re.search("[0-9]+\.[0-9]*", c).group(0)) < band[1]]
+            record_A_band_freq = record_A[columns_band_freq]
+            record_B_band_freq = record_B[columns_band_freq]
 
-                ### Compute correlation matrix
-                columns_band_freq = [c for c in record_A.columns if float(re.search("[0-9]+\.[0-9]*", c).group(0)) >= band[0] and float(re.search("[0-9]+\.[0-9]*", c).group(0)) < band[1]]
-                record_A_band_freq = record_A[columns_band_freq]
-                record_B_band_freq = record_B[columns_band_freq]
-
-                corr_subjects_band_freq = corr_multi_subjects(record_A_band_freq, record_B_band_freq, plot = False)
+            corr_subjects_band_freq = corr_multi_subjects(record_A_band_freq, record_B_band_freq, plot = False)
 
 
-                ### Bootstrap
-                # Check how to do it with twins because if we pick one twin, we have to pick the other one
+            ### Bootstrap
+            # Check how to do it with twins because if we pick one twin, we have to pick the other one
+            
+            # For bootstrap in bootstraps :
+            # 1. Select around 90 % from samples and try to keep the same distribution of the different twin types
+            MZ = [np.random.choice(range(1,nb_pair_MZ + 1), size = 2, replace = False) for _ in range(N_RESAMPLE)]
+            DZ = [np.random.choice(range(1,nb_pair_DZ + 1), size= 1, replace = False) for _ in range(N_RESAMPLE)]
+            NT = [np.random.choice(range(1,nb_not_twins + 1), size= 3, replace = False) for _ in range(N_RESAMPLE)]
+
+            for sample_nb in range(N_RESAMPLE):
                 
-                # For bootstrap in bootstraps :
-                # 1. Select 90 % from samples (look for method ...) ~10 people
-                MZ = [np.random.choice(range(1,19), size = 2, replace = False) for _ in range(N_RESAMPLE)]
-                DZ = [np.random.choice(range(1,13), size= 1, replace = False) for _ in range(N_RESAMPLE)]
-                NT = [np.random.choice(range(1,25), size= 3, replace = False) for _ in range(N_RESAMPLE)]
+                # 2. Remove the selected individuals in the rows and columns
 
-                for sample_nb in range(N_RESAMPLE):
-                    
-                    # 2. Remove the selected individuals in the rows and columns
+                corr = corr_subjects_band_freq.copy()
+                mz = "|".join(str(e) for e in MZ[sample_nb])
+                to_remove_mz = [c for c in corr.columns if re.search("Twin_MZ_("+ mz +")(A|B)", c)]
 
-                    corr = corr_subjects_band_freq.copy()
-                    mz = "|".join(str(e) for e in MZ[sample_nb])
-                    to_remove_mz = [c for c in corr.columns if re.search("Twin_MZ_("+ mz +")(A|B)", c)]
+                dz = "|".join(str(e) for e in DZ[sample_nb])
+                to_remove_dz = [c for c in corr.columns if re.search("Twin_DZ_("+ dz +")(A|B)", c)]
 
-                    dz = "|".join(str(e) for e in DZ[sample_nb])
-                    to_remove_dz = [c for c in corr.columns if re.search("Twin_DZ_("+ dz +")(A|B)", c)]
+                nt = "|".join(str(e) for e in NT[sample_nb])
+                to_remove_nt = [c for c in corr.columns if re.search("NotTwin("+ nt +")$", c)]
 
-                    nt = "|".join(str(e) for e in NT[sample_nb])
-                    to_remove_nt = [c for c in corr.columns if re.search("NotTwin("+ nt +")$", c)]
+                to_remove = to_remove_mz + to_remove_dz + to_remove_nt
+                to_keep = [col for col in corr.columns if col not in to_remove]
+                corr = corr[to_keep].drop(labels=to_remove)
 
-                    to_remove = to_remove_mz + to_remove_dz + to_remove_nt
-                    to_keep = [col for col in corr.columns if col not in to_remove]
-                    corr = corr[to_keep].drop(labels=to_remove)
+                # 3. Run eval_accuracy on this dataframe
+                auto_acc, cross_MZ_acc, cross_DZ_acc = eval_accuracy(corr)
 
-                    # 3. Run eval_accuracy on this dataframe
-                    auto_acc, cross_MZ_acc, cross_DZ_acc = eval_accuracy(corr)
+                # If dataset A and B are the same, we don't want to have the autocorrelation
+                if i == j :
+                    auto_acc = np.nan
 
-                    # 4. Stock in dataframe (columns = Acc Autocorr | Acc Crosscorr MZ | Acc Crosscorr DZ)
-                    df.append([auto_acc, cross_MZ_acc, cross_DZ_acc])
+                # 4. Stock in dataframe (columns = Acc Autocorr | Acc Crosscorr MZ | Acc Crosscorr DZ)
+                df.append([auto_acc, cross_MZ_acc, cross_DZ_acc])
 
-                df = pd.DataFrame(df, columns=["Acc Autocorr", "Acc Crosscorr MZ", "Acc Crosscorr DZ"])
-                save_path = "Accuracies_bootstrapp_" + bands_names[k] + ".csv"
-                save_path = os.path.join(folder_result, save_path)
-                df.to_csv(save_path)
-
-
-            df_join = pd.DataFrame()
-            for band in bands_names:
-                name = "Accuracies_bootstrapp_" + band + ".csv"
-                name = os.path.join(folder_result, name)
-                df = pd.read_csv(name, index_col=0)
-                new_columns_map = {col_name : col_name + "_" + band for col_name in df.columns}
-                df.rename(columns=new_columns_map, inplace=True)
-                df_join = pd.concat([df_join, df], axis = 1)
-
-            save_path = "All_accuracies_bootstrapp_merge.csv"
+            df = pd.DataFrame(df, columns=["Acc Autocorr", "Acc Crosscorr MZ", "Acc Crosscorr DZ"])
+            save_path = "Accuracies_bootstrapp_" + bands_names[k] + ".csv"
             save_path = os.path.join(folder_result, save_path)
-            df_join.to_csv(save_path)            
+            df.to_csv(save_path)
 
-            # And to finish we merge that to the final df containing all the data
-            df_final = pd.concat([df_final, df_join], ignore_index = True, sort = False)
+
+        df_join = pd.DataFrame()
+        for band in bands_names:
+            name = "Accuracies_bootstrapp_" + band + ".csv"
+            name = os.path.join(folder_result, name)
+            df = pd.read_csv(name, index_col=0)
+            new_columns_map = {col_name : col_name + "_" + band for col_name in df.columns}
+            df.rename(columns=new_columns_map, inplace=True)
+            df_join = pd.concat([df_join, df], axis = 1)
+
+        save_path = "All_accuracies_bootstrapp_merge.csv"
+        save_path = os.path.join(folder_result, save_path)
+        df_join.to_csv(save_path)            
+
+        # And to finish we merge that to the final df containing all the data
+        df_final = pd.concat([df_final, df_join], ignore_index = True, sort = False)
 
 df_final.to_csv(save_final)
+
+
+# Finally we create a stack version of the result, in order to plot in R
+all_acc = pd.DataFrame(df_final.stack(dropna=True)).reset_index().rename(columns={"level_1" : "columns", 0 : "values"})
+all_acc["columns"] = all_acc["columns"].apply(lambda x : re.split("_", x))
+all_acc["AccType"] = all_acc["columns"].apply(lambda x : x[0][4:])
+all_acc["FreqBand"] = all_acc["columns"].apply(lambda x : " ".join(x[1:]))
+
+all_acc.drop(columns=["level_0", "columns"], inplace = True)
+save_acc_path = os.path.join(FOLDER_RESULTS, "All_accuracies_every_freq_stacked.csv")
+all_acc.to_csv(save_acc_path)
