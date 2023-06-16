@@ -33,7 +33,9 @@ Regressed_Artifacts_Schaefer
 
 plot.ipynb
 plots_DK.R
+plots_Schaefer_30_sec.R
 neurochemicals_and_heritability_schaefer.ipynn
+temporary_file.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
