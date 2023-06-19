@@ -60,4 +60,4 @@ if args.heritability_anatomy :
     compute_heritability_anatomy(data_path=args.data, main_folder_results=args.results, only_gt=args.only_gt, correlation_type = args.correlation_type)
 
 if args.fingerprint:
-    compute_icc_fingerprint(data_path=args.data, main_folder_results=args.results, only_gt=args.only_gt, n_resample=args.n_resample, without_twins=args.icc_without_twins)
+    compute_icc_fingerprint(data_path=args.data, main_folder_results=args.results, only_gt=args.only_gt, n_resample=100, without_twins=args.icc_without_twins)
