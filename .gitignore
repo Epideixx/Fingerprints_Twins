@@ -36,6 +36,7 @@ plots_DK.R
 plots_Schaefer_30_sec.R
 neurochemicals_and_heritability_schaefer.ipynb
 temporary_file.ipynb
+decoding_HCP.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
