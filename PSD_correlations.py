@@ -30,14 +30,14 @@ DATA_PATH = "Data/Schaefer"
 FOLDER_RESULTS = "Results_Log_Schaefer_test"
 ONLY_GT = True
 
-def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_GT = ONLY_GT):
+def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = ONLY_GT):
 
     # --- PATH TO SAVE THE RESULTS ---
 
     if not os.path.exists(main_folder_results):
         os.mkdir(main_folder_results)
 
-    if only_GT:
+    if only_gt:
         main_folder_results = os.path.join(main_folder_results, "Only_GT")
     else :
         main_folder_results = os.path.join(main_folder_results, "Include_SR")
@@ -326,7 +326,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_GT = 
 
 
             # Correlations between the other unrelated subjects
-            if only_GT :
+            if only_gt :
                 ids_NT = ids_NT_only_GT
 
             mask_NT = [True if subj_id in ids_NT else False for subj_id in record_A.index]
