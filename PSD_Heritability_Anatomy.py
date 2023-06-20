@@ -24,7 +24,7 @@ GAMMA = (30.0, 50.0)
 HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
-DATA_PATH = "new_Data"
+DATA_PATH = "Data"
 FOLDER_RESULTS = "Results_Schaefer_Anatomy_test"
 ONLY_GT = True 
 CORRELATION_TYPE = "icc" # "icc" or "pearson"
@@ -43,7 +43,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     if not os.path.exists(main_folder_results):
         os.mkdir(main_folder_results)
 
-    main_folder_results = os.path.join(main_folder_results, "PSD_Heritability")
+    main_folder_results = os.path.join(main_folder_results, "PSD_Heritability_Anatomy")
     if not os.path.exists(main_folder_results):
         os.mkdir(main_folder_results)
 
