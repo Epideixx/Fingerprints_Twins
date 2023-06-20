@@ -24,7 +24,7 @@ GAMMA = (30.0, 50.0)
 HIGH_GAMMA = (50.0, 150.0)
 
 # Parameters 
-DATA_PATH = "Data"
+DATA_PATH = "Data/Schaefer"
 FOLDER_RESULTS = "Results_Schaefer_Anatomy_test"
 ONLY_GT = True 
 CORRELATION_TYPE = "icc" # "icc" or "pearson"
@@ -143,16 +143,8 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     ids_DZ = [k for k, v in rename_twins.items() if "Twin_DZ" in v]
     ids_NT = [k for k, v in rename_twins.items() if "NotTwin" in v]
 
-    def f7(seq):
-        """ Remove duplicates of a list and preserve the order. """
-        seen = set()
-        seen_add = seen.add
-        return [x for x in seq if not (x in seen or seen_add(x))]
-
-    list_ROI = f7([c.replace(re.search("_[0-9]+\.[0-9]*", c).group(0), "") for c in record_1.columns])
+    list_ROI = record_1.columns
     n_ROI = len(list_ROI)
-    freqs = sorted(set([float(re.search("[0-9]+\.[0-9]*", c).group(0)) for c in record_1.columns]))
-    n_freqs = len(freqs)
 
     bands = [DELTA, THETA, ALPHA, BETA, GAMMA, HIGH_GAMMA]
     bands_names = ["DELTA", "THETA", "ALPHA", "BETA", "GAMMA", "HIGH GAMMA"]
@@ -215,7 +207,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
         elif correlation_type == "pearson" :
             corr_MZ[i] = pearsonr(df[df.columns[0]], df[df.columns[1]])[0]
 
-    corr_MZ = np.reshape(corr_MZ, (n_ROI, n_freqs))
+    corr_MZ = np.reshape(corr_MZ, (n_ROI, 1))
     corr_MZ = pd.DataFrame(corr_MZ, columns=freqs, index=list_ROI)
     corr_MZ.to_csv(save_file, index_label="ROI")
 
@@ -244,8 +236,8 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
         elif correlation_type == "pearson" :
             corr_DZ[i] = pearsonr(df[df.columns[0]], df[df.columns[1]])[0]
 
-    corr_DZ = np.reshape(corr_DZ, (n_ROI, n_freqs))
-    corr_DZ = pd.DataFrame(corr_DZ, columns=freqs, index=list_ROI)
+    corr_DZ = np.reshape(corr_DZ, (n_ROI, 1))
+    corr_DZ = pd.DataFrame(corr_DZ, columns=["all"], index=list_ROI)
     corr_DZ.to_csv(save_file, index_label="ROI")
 
 
