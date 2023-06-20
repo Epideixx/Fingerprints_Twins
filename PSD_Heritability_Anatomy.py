@@ -63,7 +63,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     ### Annotate Data such that twins are linked ###
 
     # Import extra data (confidential)
-    all_data_restricted_filename = "new_Data/All_Data_RESTRICTED.csv"
+    all_data_restricted_filename = "Data/All_Data_RESTRICTED.csv"
     all_data_restricted = pd.read_csv(all_data_restricted_filename)
 
     # Remove subjects who don't have a MEG recording
