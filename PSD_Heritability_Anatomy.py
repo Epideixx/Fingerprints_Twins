@@ -208,7 +208,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
             corr_MZ[i] = pearsonr(df[df.columns[0]], df[df.columns[1]])[0]
 
     corr_MZ = np.reshape(corr_MZ, (n_ROI, 1))
-    corr_MZ = pd.DataFrame(corr_MZ, columns=freqs, index=list_ROI)
+    corr_MZ = pd.DataFrame(corr_MZ, columns=["all"], index=list_ROI)
     corr_MZ.to_csv(save_file, index_label="ROI")
 
 
