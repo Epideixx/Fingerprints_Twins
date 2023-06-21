@@ -71,9 +71,9 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
     # ---   IMPORT DATA   ---
 
-    record_1 = pd.read_csv(os.path.join(data_path, "record_1_Schaefer.csv"), index_col="Subject_ID")
-    record_2 = pd.read_csv(os.path.join(data_path, "record_2_Schaefer.csv"), index_col="Subject_ID")
-    record_3 = pd.read_csv(os.path.join(data_path, "record_3_Schaefer.csv"), index_col="Subject_ID")
+    record_1 = pd.read_csv(os.path.join(data_path, "record_1.csv"), index_col="Subject_ID")
+    record_2 = pd.read_csv(os.path.join(data_path, "record_2.csv"), index_col="Subject_ID")
+    record_3 = pd.read_csv(os.path.join(data_path, "record_3.csv"), index_col="Subject_ID")
 
     # Log the data
 

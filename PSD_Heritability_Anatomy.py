@@ -54,7 +54,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
     # ---   IMPORT DATA   ---
 
-    index = pd.read_csv(os.path.join(data_path, "record_1_Schaefer.csv"), index_col="Subject_ID").index
+    index = pd.read_csv(os.path.join(data_path, "record_1.csv"), index_col="Subject_ID").index
     record_1 = pd.read_csv(os.path.join(data_path, "anatomy_matrix_subjects.csv"), index_col=0)
     record_1.index = index
 
