@@ -1,6 +1,3 @@
-# To edit :
-# - ZScore 
-# - if only GT remove twins from NT
 # ---   DEPENDENCIES   ---
 
 import os

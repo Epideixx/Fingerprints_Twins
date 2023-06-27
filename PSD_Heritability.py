@@ -12,6 +12,7 @@ import seaborn as sns
 sns.set_theme(style="white")
 from matplotlib import pyplot as plt
 
+
 # ---   PARAMETERS   ---
 # Frequency bands
 BROADBAND = (0.0, 150.0)
@@ -28,7 +29,24 @@ FOLDER_RESULTS = "Results_Log_Schaefer_test"
 ONLY_GT = True 
 CORRELATION_TYPE = "icc" # "icc" or "pearson"
 
+
+# ---   MAIN FUNCTION   ---
 def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = ONLY_GT, correlation_type = CORRELATION_TYPE):
+
+    """
+    Compute the heritability based on Falconer's formula.
+
+    Inputs
+    ------
+    data_path : string
+        Path of the folder containing the recordings (record_empty_room, record_1.csv, record_2.csv, ...)
+    main_folder_results : string
+        Path folder to save results
+    only_gt : boolean
+        True if use only genetic test, False if also includes self-reported zygosity
+    correlation_type : string
+        Correlation used in Falconer's formula, can be "icc" or "pearson"
+    """
 
     # --- PATH TO SAVE THE RESULTS ---
 
@@ -120,11 +138,9 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     # - Twin MZ 1A and Twin MZ 1B
     # - Twin DZ 1A and Twin DZ 1B
     # - NotTwin 1
-
     count_MZ = 1
     count_DZ = 1
     count_NT = 1
-
     rename_twins = {} # {subject_ID : new_name}
     for twins in twins_dict.values():
         if twins["type"] == "MZ" and len(twins["subjects"]) >= 2:
@@ -177,6 +193,20 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     # ---   FUNCTIONS   ---
 
     def compute_icc(df, n = 89, k = 2):
+        """
+        Compute the interclass correlation coefficient
+
+        inputs
+        ------
+        df : dataframe
+            Rows = Raters
+            Columns = Evaluations
+        n : int
+            Number of raters
+        k : int
+            Number of evaluations
+        """
+
         df_b = n-1
         df_w = n*(k-1)
 
@@ -195,10 +225,11 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
     # ---   MAIN   ---
 
-    # MZ Correlation
+    ### MZ Correlation
 
     save_file = os.path.join(main_folder_results, "corr_MZ.csv")
 
+    # Apply a mask on the recordings to only keep MZ twins + Zscore within every individual
     mask_MZ = [True if subj_id in ids_MZ else False for subj_id in record_1.index]
     record_1_MZ = record_1[mask_MZ].reindex(ids_MZ).rename(index=rename_twins)
     zscore_1_MZ = zscore(record_1_MZ, axis = 1)
@@ -216,7 +247,10 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     n = n_subs
     k = n_measurements
 
+    # For every feature, we compute the icc
     for i, feature in tqdm(enumerate(record_1.columns), total = len(record_1.columns)):
+
+        # Every possible pair of twins
         df1 = pd.DataFrame(np.array([[zscore_1_MZ.iloc[k][feature], zscore_1_MZ.iloc[k+1][feature]] for k in range(0, len(record_1_MZ), 2)]))
         df2 = pd.DataFrame(np.array([[zscore_2_MZ.iloc[k][feature], zscore_2_MZ.iloc[k+1][feature]] for k in range(0, len(record_1_MZ), 2)]))
         df3 = pd.DataFrame(np.array([[zscore_3_MZ.iloc[k][feature], zscore_3_MZ.iloc[k+1][feature]] for k in range(0, len(record_1_MZ), 2)]))
@@ -227,21 +261,26 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
         df8 = pd.DataFrame(np.array([[zscore_2_MZ.iloc[k][feature], zscore_3_MZ.iloc[k+1][feature]] for k in range(0, len(record_1_MZ), 2)]))
         df9 = pd.DataFrame(np.array([[zscore_3_MZ.iloc[k][feature], zscore_2_MZ.iloc[k+1][feature]] for k in range(0, len(record_1_MZ), 2)]))
 
+        # Compute ICC scores for every small dataframe
         for j, df_j in enumerate([df1, df2, df3, df4, df5, df6, df7, df8, df9]):
             if correlation_type == "icc":
                 corr_MZ_sub[j][i] = compute_icc(df_j, n = len(record_1_MZ), k = n_measurements)
             elif correlation_type == "pearson" :
                 corr_MZ_sub[j][i] = pearsonr(df_j[df_j.columns[0]], df_j[df_j.columns[1]])[0]
+        
+        # Compute ICC for the total big dataframe
         df = pd.concat([df1, df2, df3, df4, df5, df6, df7, df8, df9], axis = 0).rename(columns={0:"Twin A", 1: "Twin B"})
         if correlation_type == "icc":
             corr_MZ[i] = compute_icc(df, n = n_subs, k = n_measurements)
         elif correlation_type == "pearson" :
             corr_MZ[i] = pearsonr(df[df.columns[0]], df[df.columns[1]])[0]
 
+    # Save the ICC computed on the full data
     corr_MZ = np.reshape(corr_MZ, (n_ROI, n_freqs))
     corr_MZ = pd.DataFrame(corr_MZ, columns=freqs, index=list_ROI)
     corr_MZ.to_csv(save_file, index_label="ROI")
 
+    # Save the ICCs for every small dataframes
     for j in range(9):
         save_file = "corr_MZ_partial_" + str(j) + ".csv"
         save_file = os.path.join(main_folder_results, save_file)
@@ -249,9 +288,12 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
         corr_MZ = pd.DataFrame(corr_MZ, columns=freqs, index=list_ROI)
         corr_MZ.to_csv(save_file, index_label="ROI")
 
-    # DZ Correlation
+
+
+    ### DZ Correlation
     save_file = os.path.join(main_folder_results, "corr_DZ.csv")
 
+    # Apply a mask on the recordings to only keep DZ twins + Zscore within every individual
     mask_DZ = [True if subj_id in ids_DZ else False for subj_id in record_1.index]
     record_1_DZ = record_1[mask_DZ].reindex(ids_DZ).rename(index=rename_twins)
     zscore_1_DZ = zscore(record_1_DZ, axis = 1)
@@ -269,7 +311,10 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     n = n_subs
     k = n_measurements
 
+    # For every feature, we compute the icc
     for i, feature in tqdm(enumerate(record_1.columns), total = len(record_1.columns)):
+
+        # Every possible pair of twins
         df1 = pd.DataFrame(np.array([[zscore_1_DZ.iloc[k][feature], zscore_1_DZ.iloc[k+1][feature]] for k in range(0, len(record_1_DZ), 2)]))
         df2 = pd.DataFrame(np.array([[zscore_2_DZ.iloc[k][feature], zscore_2_DZ.iloc[k+1][feature]] for k in range(0, len(record_1_DZ), 2)]))
         df3 = pd.DataFrame(np.array([[zscore_3_DZ.iloc[k][feature], zscore_3_DZ.iloc[k+1][feature]] for k in range(0, len(record_1_DZ), 2)]))
@@ -279,21 +324,27 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
         df7 = pd.DataFrame(np.array([[zscore_3_DZ.iloc[k][feature], zscore_1_DZ.iloc[k+1][feature]] for k in range(0, len(record_1_DZ), 2)]))
         df8 = pd.DataFrame(np.array([[zscore_2_DZ.iloc[k][feature], zscore_3_DZ.iloc[k+1][feature]] for k in range(0, len(record_1_DZ), 2)]))
         df9 = pd.DataFrame(np.array([[zscore_3_DZ.iloc[k][feature], zscore_2_DZ.iloc[k+1][feature]] for k in range(0, len(record_1_DZ), 2)]))
+
+        # Compute ICC scores for every small dataframe
         for j, df_j in enumerate([df1, df2, df3, df4, df5, df6, df7, df8, df9]):
             if correlation_type == "icc":
                 corr_DZ_sub[j][i] = compute_icc(df_j, n = len(record_1_MZ), k = n_measurements)
             elif correlation_type == "pearson" :
                 corr_DZ_sub[j][i] = pearsonr(df_j[df_j.columns[0]], df_j[df_j.columns[1]])[0]
+
+        # Compute ICC for the total big dataframe
         df = pd.concat([df1, df2, df3, df4, df5, df6, df7, df8, df9], axis = 0).rename(columns={0:"Twin A", 1: "Twin B"})
         if correlation_type == "icc":
             corr_DZ[i] = compute_icc(df, n = n_subs, k = n_measurements)
         elif correlation_type == "pearson" :
             corr_DZ[i] = pearsonr(df[df.columns[0]], df[df.columns[1]])[0]
 
+    # Save the ICC computed on the full data
     corr_DZ = np.reshape(corr_DZ, (n_ROI, n_freqs))
     corr_DZ = pd.DataFrame(corr_DZ, columns=freqs, index=list_ROI)
     corr_DZ.to_csv(save_file, index_label="ROI")
 
+    # Save the ICCs for every small dataframes
     for j in range(9):
         save_file = "corr_DZ_partial_" + str(j) + ".csv"
         save_file = os.path.join(main_folder_results, save_file)
@@ -302,14 +353,21 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
         corr_DZ.to_csv(save_file, index_label="ROI")
 
 
-    # Heritability
+
+    ### Heritability
+
+    # Load the previous results
     corr_MZ = pd.read_csv(os.path.join(main_folder_results, "corr_MZ.csv"), index_col="ROI")
     corr_DZ = pd.read_csv(os.path.join(main_folder_results, "corr_DZ.csv"), index_col="ROI")
+
+    # Apply Falconer's formula
     heritability = 2*(corr_MZ - corr_DZ)
 
+    # Save heritability
     save_file = os.path.join(main_folder_results, "heritability.csv")
     heritability.to_csv(save_file, index_label="ROI")
 
+    # Average the results per frequency band
     heritability_avg_per_band = heritability.copy()
     for ind, band in enumerate(bands):
         cols = [c for c in heritability.columns if float(c) >= band[0] and float(c) < band[1]]
@@ -321,7 +379,8 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     save_file = os.path.join(main_folder_results, "heritability_avg_per_band.csv")
     heritability_avg_per_band.to_csv(save_file, index_label="ROI")
 
-    ### COMPUTE HERITABILITY MEAN AND STD HERE !!!!
+
+    # Compute the mean heritability (+ std) for every pair of twins
     corr_MZ = []
     corr_DZ = []
 

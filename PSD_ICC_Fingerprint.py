@@ -12,6 +12,8 @@ import seaborn as sns
 sns.set_theme(style="white")
 from matplotlib import pyplot as plt
 
+
+
 # ---   PARAMETERS   ---
 # Frequency bands
 BROADBAND = (0.0, 150.0)
@@ -29,7 +31,25 @@ ONLY_GT = True #Do not change the result here as we do not consider the relation
 WITHOUT_TWINS = True
 N_RESAMPLE = 100
 
+# ---   MAIN FUNCTION   ---
 def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, n_resample = N_RESAMPLE ,only_gt = ONLY_GT, without_twins = WITHOUT_TWINS):
+
+    """
+    Compute the ICC for every feature to evaluate how useful one is for fingerprinting.
+
+    Inputs
+    ------
+    data_path : string
+        Path of the folder containing the recordings (record_empty_room, record_1.csv, record_2.csv, ...)
+    main_folder_results : string
+        Path folder to save results
+    only_gt : boolean
+        True if use only genetic test, False if also includes self-reported zygosity
+    without_twins : boolean
+        True means we compute only compute ICC on bootstrapped dataframe in which we only keep one twin per pair
+    n_resample : int
+        if without_twins, number of bootstrapped samples
+    """
 
     # --- PATH TO SAVE THE RESULTS ---
 
@@ -116,11 +136,9 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, n_resample
     # - Twin MZ 1A and Twin MZ 1B
     # - Twin DZ 1A and Twin DZ 1B
     # - NotTwin 1
-
     count_MZ = 1
     count_DZ = 1
     count_NT = 1
-
     rename_twins = {} # {subject_ID : new_name}
     for twins in twins_dict.values():
         if twins["type"] == "MZ" and len(twins["subjects"]) >= 2:
@@ -173,6 +191,20 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, n_resample
     # ---   FUNCTIONS   ---
 
     def compute_icc(df, n = 89, k = 2):
+        """
+        Compute the interclass correlation coefficient
+
+        inputs
+        ------
+        df : dataframe
+            Rows = Raters
+            Columns = Evaluations
+        n : int
+            Number of raters
+        k : int
+            Number of evaluations
+        """
+
         df_b = n-1
         df_w = n*(k-1)
 
@@ -190,6 +222,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, n_resample
 
     # ---   MAIN   ---
 
+    # ICC with only one twin per pair
     if without_twins :
 
         iccs = []
@@ -201,6 +234,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, n_resample
             zscore_2 = zscore(record_2, axis = 1).rename(columns = {col : col + "_B" for col in record_1.columns})
             zscore_3 = zscore(record_3, axis = 1).rename(columns = {col : col + "_C" for col in record_1.columns})
 
+            # Select one subject per family
             ids_to_keep = [list(twins_dict.values())[i]['subjects'][np.random.randint(len(list(twins_dict.values())[i]['subjects']))] for i in range(len(twins_dict.values()))]
             mask = [True if id in ids_to_keep else False for id in zscore_1.index]
 
@@ -211,6 +245,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, n_resample
             n_subs = zscore_1.shape[0]
             n_measurements = 3
 
+            # Compute the ICC for the resampled dataset, for every feature
             icc = np.zeros(n_ROI * n_freqs)
             for i, feature in enumerate(record_1.columns):
                 df = pd.concat([zscore_1[feature + "_A"], zscore_2[feature + "_B"], zscore_3[feature + "_C"]], axis = 1)
@@ -225,11 +260,12 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, n_resample
         iccs = np.array(iccs)
         icc = np.mean(iccs, axis = 0)
 
+        # Save ICC
         icc = pd.DataFrame(icc, columns=freqs, index=list_ROI)
         save_file = os.path.join(main_folder_results, "ICC_without_twins.csv")
         icc.to_csv(save_file, index_label="ROI")
 
-
+        # Average ICC per band
         icc_avg_per_band = icc.copy()
         for ind, band in enumerate(bands):
             cols = [c for c in icc.columns if float(c) >= band[0] and float(c) < band[1]]
@@ -241,6 +277,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, n_resample
         save_file = os.path.join(main_folder_results, "ICC_without_twins_avg_per_band.csv")
         icc_avg_per_band.to_csv(save_file, index_label="ROI")
 
+    # Else we keep the original dataset
     else :
         save_file = os.path.join(main_folder_results, "ICC.csv")
 
@@ -251,16 +288,19 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, n_resample
         n_subs = len(record_1.index)
         n_measurements = 3
 
+        # Compute the ICC for every feature
         icc = np.zeros(n_ROI * n_freqs)
         for i, feature in tqdm(enumerate(record_1.columns), total = len(record_1.columns)):
             df = pd.concat([zscore_1[feature + "_A"], zscore_2[feature + "_B"], zscore_3[feature + "_C"]], axis = 1)
             icc[i] = compute_icc(df, n = n_subs, k = n_measurements)
 
+        # Save ICC
         icc = np.reshape(icc, (n_ROI, n_freqs))
         icc = pd.DataFrame(icc, columns=freqs, index=list_ROI)
         save_file = os.path.join(main_folder_results, "ICC.csv")
         icc.to_csv(save_file, index_label="ROI")
 
+        # Average ICC per band
         icc_avg_per_band = icc.copy()
         for ind, band in enumerate(bands):
             cols = [c for c in icc.columns if float(c) >= band[0] and float(c) < band[1]]

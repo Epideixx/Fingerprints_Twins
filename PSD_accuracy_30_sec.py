@@ -1,24 +1,3 @@
-"""
-This Python script runs multiple identification processes (identification of the subject themselves, identification of the twin), for every pair of distinct datasets.
-For statistical analysis of the results, a bootstrap method is used, evaluating the acuracies 1000 times without replacement, using each time 90 % of the dataset.
-
----  RETURNS  ---
-
-FILES :
-- FOLDER_RESULTS/Dataset_A_vs_Dataset_B/Accuracies_bootstrapp_FREQBAND.csv (with A and B two different datasets, and FREQBAND a frequency band)
-Columns = Accuracy correlation with themself, Accuracy identification MZ Twin, Accuracy identification DZ Twin
-Rows = Bootstrapp
-- FOLDER_RESULTS/Dataset_A_vs_Dataset_B/All_accuracies_bootstrapp_merge.csv
-Merging of all the frequency bands, along the columns
-- FOLDER_RESULTS/All_accuracies_every_freq.csv
-Merging of all the bootstrapped accuracies, creating a final file with all the accuracies for every frequency bands
-Columns = Accuracies per band (BROADBAND, THETA, DELTA, ... ) per type of relation (Auto, MZ Twin, DZ Twin)
-Rows = All the boostraps
-
-FIGURES :
-Nothing
-
-"""
 # ---   DEPENDENCIES   ---
 
 import os
@@ -32,6 +11,8 @@ from tqdm import tqdm
 import seaborn as sns
 sns.set_theme(style="white")
 from matplotlib import pyplot as plt
+
+
 
 # ---   PARAMETERS   ---
 # Frequency bands
@@ -48,8 +29,24 @@ DATA_PATH = "Data/Schaefer_30_second"
 FOLDER_RESULTS = "Results_Log_Schaefer_test"
 ONLY_GT = True
 
+
+# ---   MAIN FUNCTION   ---
 def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = ONLY_GT):
-        
+
+    """
+    Compute singleton and twin pairs differentiation accuracies using PSDs (see paper) computed from 30-second segments of recordings.
+    It computes it separately for pairs of recordings from the same session and for pairs of recordings from different sessions.
+
+    Inputs
+    ------
+    data_path : string
+        Path of the folder containing the recordings (Scaefer_PSD_m1_30second_seg1.csv, Scaefer_PSD_m1_30second_seg2.csv, ...)
+    main_folder_results : string
+        Path folder to save results
+    only_gt : boolean
+        True if use only genetic test, False if also includes self-reported zygosity
+    """
+
     # --- PATH TO SAVE THE RESULTS ---
 
     if not os.path.exists(main_folder_results):
@@ -68,7 +65,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
     # ---   IMPORT DATA   ---
 
-    # Import the csv and log it
+    # Import the csv and apply log to it
     record_1 = []
     for path_record_1 in [os.path.join(data_path, "Scaefer_PSD_m1_30second_seg" + str(i) + ".csv") for i in range(1, 9)] :
         record_1.append(np.log(pd.read_csv(path_record_1, index_col="Subject_ID")))
@@ -86,6 +83,8 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
         record_3.append(np.log(pd.read_csv(path_record_3, index_col="Subject_ID")))
 
     print("Every PSD from session 3 has been loaded")
+
+
 
     # ---   USEFULL ITEMS   ---
 
@@ -144,11 +143,9 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     # - Twin MZ 1A and Twin MZ 1B
     # - Twin DZ 1A and Twin DZ 1B
     # - NotTwin 1
-
     count_MZ = 1
     count_DZ = 1
     count_NT = 1
-
     rename_twins = {} # {subject_ID : new_name}
     for twins in twins_dict.values():
         if twins["type"] == "MZ" and len(twins["subjects"]) >= 2:
@@ -183,11 +180,13 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     print("The total number of participants is : ", len(all_data_restricted))
     print("We will work with {} pairs of siblings : {} pairs of MZ twins, {} pairs of DZ twins and {} pairs of siblings with uncertain relation".format(nb_pair, nb_pair_MZ, nb_pair_DZ, nb_pair_not_twins))
 
+
+
     # ---   USEFULL FUNCTIONS   ---
     def corr_multi_subjects(dataset_1, dataset_2, plot = True, save_plot = None, save_csv = None):
         """
         Compute the pearson correlation of the dataset_1 with the dataset_2, subjects by subjects (= rows in datasets).
-        Plot the correlation matrix if plot = True.
+        Plot the correlation matrix if plot = True. Save the correlation matrix as a csv file if save_file = True.
         """
 
         # Compute the Pearson correlation between every pair of subjects
@@ -198,10 +197,13 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
         # Convert to Dataframe 
         corr = pd.DataFrame(corr, index = [rename_twins[id] for id in dataset_1.index], columns= [rename_twins[id] for id in dataset_2.index])
+
+        # Save csv if asked
         if save_csv:
             save_csv = save_csv + ".csv"
             corr.to_csv(save_csv, index = True, index_label="Subjects")
-        # Plot
+
+        # Plot if asked
         if plot : 
             f, ax = plt.subplots(figsize=(11, 9))
             cmap = sns.color_palette("coolwarm", as_cmap=True)
@@ -261,18 +263,22 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     group_of_records = {1 : record_1, 2 : record_2, 3 : record_3}
     folder_withing_record = os.path.join(main_folder_results, "Within_record")
 
+    # Final dataframe containing all the results
     df_all_merge_within_records = []
 
+    # For every session, we compute the accuracies 
     for id_record in range(1, 4):
         folder_ID_result = os.path.join(folder_withing_record, "Session" + str(id_record))
 
         if not os.path.exists(folder_ID_result):
             os.makedirs(folder_ID_result)
 
+        # Dataframe containing all the accuracies for the session
         df_final = pd.DataFrame()
         save_final = "All_accuracies_every_freq.csv"
         save_final = os.path.join(folder_ID_result, save_final)
 
+        # For every pair of recordings
         for i in range(1, 9):
             for j in range(1, 9):
 
@@ -291,20 +297,25 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
                 df_every_freq = pd.DataFrame()
 
+                # Compute the accuracy for every band (including BROADBAND)
                 for k, band in tqdm(enumerate(bands), total = len(bands)):
 
-                    ### Compute correlation matrix
+                    # Compute correlation matrix
                     columns_band_freq = [c for c in record_A.columns if float(re.search("[0-9]+\.[0-9]*", c).group(0)) >= band[0] and float(re.search("[0-9]+\.[0-9]*", c).group(0)) < band[1]]
                     record_A_band_freq = record_A[columns_band_freq]
                     record_B_band_freq = record_B[columns_band_freq]
 
                     corr_subjects_band_freq = corr_multi_subjects(record_A_band_freq, record_B_band_freq, plot = False)  
 
+                    # Compute the accuracies using the correlation matrix
                     corr = corr_subjects_band_freq.copy()
                     auto_acc, cross_MZ_acc, cross_DZ_acc = eval_accuracy(corr)
+
+                    # If record 1 == record 2, we remove the singleton accuracy (=1)
                     if i == j :
                         auto_acc = np.nan
 
+                    # Save the result in a dataframe
                     df = pd.DataFrame([[auto_acc, cross_MZ_acc, cross_DZ_acc]], columns=["Acc Autocorr", "Acc Crosscorr MZ", "Acc Crosscorr DZ"])
                     new_columns_map = {col_name : col_name + "_" + bands_names[k] for col_name in df.columns}
                     df.rename(columns=new_columns_map, inplace=True)
@@ -318,13 +329,15 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
         df_final.to_csv(save_final)
         df_all_merge_within_records.append(df_final)
 
+    # Save the final global result, with all the accuracies merged
     all_acc = pd.concat(df_all_merge_within_records, axis = 0)
     all_acc.to_csv(os.path.join(folder_withing_record, "All_accuracies_every_freq.csv"))
+
+    # Create a stacked version to be used in R
     all_acc = pd.DataFrame(all_acc.stack(dropna = True)).reset_index().rename(columns={"level_1" : "columns", 0 : "values"})
     all_acc["columns"] = all_acc["columns"].apply(lambda x : re.split("_", x))
     all_acc["AccType"] = all_acc["columns"].apply(lambda x : x[0][4:])
     all_acc["FreqBand"] = all_acc["columns"].apply(lambda x : " ".join(x[1:]))
-
     all_acc.drop(columns=["level_0", "columns"], inplace = True)
     save_acc_path = os.path.join(folder_withing_record, "All_accuracies_every_freq_stacked.csv")
     all_acc.to_csv(save_acc_path)
@@ -335,8 +348,11 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
     group_of_records = {1 : record_1, 2 : record_2, 3 : record_3}
     folder_between_records = os.path.join(main_folder_results, "Between_records")
+
+    # Final dataframe containing all the results
     df_all_merge_between_records = []
 
+    # For every pair of different sessions, we compute the accuracies 
     for id_record_1 in range(1, 4):
         for id_record_2 in range(1, 4):
             if id_record_1 != id_record_2 :
@@ -346,10 +362,12 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
                 if not os.path.exists(folder_ID_result):
                     os.makedirs(folder_ID_result)
 
+                # Dataframe containing all the accuracies for this pair of sessions
                 df_final = pd.DataFrame()
                 save_final = "All_accuracies_every_freq.csv"
                 save_final = os.path.join(folder_ID_result, save_final)
 
+                # For every pair of recordings
                 for i in range(1, 9):
                     for j in range(1, 9):
                         DATASET_1 = i 
@@ -368,20 +386,23 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
                         df_every_freq = pd.DataFrame()
 
+                        # Compute the accuracy for every band (including BROADBAND)
                         for k, band in tqdm(enumerate(bands), total = len(bands)):
 
                             df = []
 
-                            ### Compute correlation matrix
+                            # Compute correlation matrix
                             columns_band_freq = [c for c in record_A.columns if float(re.search("[0-9]+\.[0-9]*", c).group(0)) >= band[0] and float(re.search("[0-9]+\.[0-9]*", c).group(0)) < band[1]]
                             record_A_band_freq = record_A[columns_band_freq]
                             record_B_band_freq = record_B[columns_band_freq]
 
                             corr_subjects_band_freq = corr_multi_subjects(record_A_band_freq, record_B_band_freq, plot = False)
                             
+                            # Compute the accuracies using the correlation matrix
                             corr = corr_subjects_band_freq.copy()
                             auto_acc, cross_MZ_acc, cross_DZ_acc = eval_accuracy(corr)
-
+                            
+                            # Save the result in a dataframe
                             df = pd.DataFrame([[auto_acc, cross_MZ_acc, cross_DZ_acc]], columns=["Acc Autocorr", "Acc Crosscorr MZ", "Acc Crosscorr DZ"])
                             new_columns_map = {col_name : col_name + "_" + bands_names[k] for col_name in df.columns}
                             df.rename(columns=new_columns_map, inplace=True)
@@ -395,13 +416,15 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
                 df_final.to_csv(save_final)
                 df_all_merge_between_records.append(df_final)
 
+    # Save the final global result, with all the accuracies merged
     all_acc = pd.concat(df_all_merge_between_records, axis = 0)
     all_acc.to_csv(os.path.join(folder_between_records, "All_accuracies_every_freq.csv"))
+
+    # Create a stacked version to be used in R
     all_acc = pd.DataFrame(all_acc.stack(dropna = True)).reset_index().rename(columns={"level_1" : "columns", 0 : "values"})
     all_acc["columns"] = all_acc["columns"].apply(lambda x : re.split("_", x))
     all_acc["AccType"] = all_acc["columns"].apply(lambda x : x[0][4:])
     all_acc["FreqBand"] = all_acc["columns"].apply(lambda x : " ".join(x[1:]))
-
     all_acc.drop(columns=["level_0", "columns"], inplace = True)
     save_acc_path = os.path.join(folder_between_records, "All_accuracies_every_freq_stacked.csv")
     all_acc.to_csv(save_acc_path)

@@ -1,25 +1,3 @@
-"""
-This Python script runs multiple identification processes (identification of the subject themselves, identification of the twin), for every pair of distinct datasets.
-For statistical analysis of the results, a bootstrap method is used, evaluating the acuracies 1000 times without replacement, using each time 90 % of the dataset.
-
----  RETURNS  ---
-
-FILES :
-- main_folder_results/Dataset_A_vs_Dataset_B/Accuracies_bootstrapp_FREQBAND.csv (with A and B two different datasets, and FREQBAND a frequency band)
-Columns = Accuracy correlation with themself, Accuracy identification MZ Twin, Accuracy identification DZ Twin
-Rows = Bootstrapp
-- main_folder_results/Dataset_A_vs_Dataset_B/All_accuracies_bootstrapp_merge.csv
-Merging of all the frequency bands, along the columns
-- main_folder_results/All_accuracies_every_freq.csv
-Merging of all the bootstrapped accuracies, creating a final file with all the accuracies for every frequency bands
-Columns = Accuracies per band (BROADBAND, THETA, DELTA, ... ) per type of relation (Auto, MZ Twin, DZ Twin)
-Rows = All the boostraps
-
-FIGURES :
-Nothing
-
-"""
-
 # ---   DEPENDENCIES   ---
 
 import os
@@ -33,6 +11,8 @@ from tqdm import tqdm
 import seaborn as sns
 sns.set_theme(style="white")
 from matplotlib import pyplot as plt
+
+
 
 # ---   PARAMETERS   ---
 # Frequency bands
@@ -50,7 +30,23 @@ FOLDER_RESULTS = "Results_Log_Schaefer_test"
 N_RESAMPLE = 1000
 ONLY_GT = True
 
+# ---   MAIN FUNCTION   ---
 def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = ONLY_GT, n_resample = N_RESAMPLE):
+    
+    """
+    Compute singleton and twin pairs differentiation accuracies using the PSD from the empty rooms vs the PSDs from the recording sessions.
+
+    Inputs
+    ------
+    data_path : string
+        Path of the folder containing the recordings (record_empty_room, record_1.csv, record_2.csv, ...)
+    main_folder_results : string
+        Path folder to save results
+    only_gt : boolean
+        True if use only genetic test, False if also includes self-reported zygosity
+    n_resamples : int
+        Number of bootsrappings to compute the accuracies
+    """
 
     # --- PATH TO SAVE THE RESULTS ---
 
@@ -139,11 +135,9 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     # - Twin MZ 1A and Twin MZ 1B
     # - Twin DZ 1A and Twin DZ 1B
     # - NotTwin 1
-
     count_MZ = 1
     count_DZ = 1
     count_NT = 1
-
     rename_twins = {} # {subject_ID : new_name}
     for twins in twins_dict.values():
         if twins["type"] == "MZ" and len(twins["subjects"]) >= 2:
@@ -182,7 +176,7 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
     def corr_multi_subjects(dataset_1, dataset_2, plot = True, save_plot = None, save_csv = None):
         """
         Compute the pearson correlation of the dataset_1 with the dataset_2, subjects by subjects (= rows in datasets).
-        Plot the correlation matrix if plot = True.
+        Plot the correlation matrix if plot = True. Save the correlation matrix as a csv file if save_file = True.
         """
 
         # Compute the Pearson correlation between every pair of subjects
@@ -193,10 +187,13 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
         # Convert to Dataframe 
         corr = pd.DataFrame(corr, index = [rename_twins[id] for id in dataset_1.index], columns= [rename_twins[id] for id in dataset_2.index])
+        
+        # Save csv if asked
         if save_csv:
             save_csv = save_csv + ".csv"
             corr.to_csv(save_csv, index = True, index_label="Subjects")
-        # Plot
+        
+        # Plot if asked
         if plot : 
             f, ax = plt.subplots(figsize=(11, 9))
             cmap = sns.color_palette("coolwarm", as_cmap=True)
@@ -250,14 +247,16 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
     # ---   MAIN    ---
 
-
+    # Final dataframe containing all the results
     df_final = pd.DataFrame()
     save_final = "All_accuracies_every_freq.csv"
     save_final = os.path.join(main_folder_results, save_final)
 
+    # Every session against the empty room "session"
     for i in range(1, 5):
         for j in range(1, 5):
             if i == 4 or j == 4 :
+
                 DATASET_1 = i 
                 DATASET_2 = j
 
@@ -274,7 +273,8 @@ def main(data_path = DATA_PATH, main_folder_results = FOLDER_RESULTS, only_gt = 
 
                 bands = [BROADBAND, DELTA, THETA, ALPHA, BETA, GAMMA, HIGH_GAMMA]
                 bands_names = ["BROADBAND", "DELTA", "THETA", "ALPHA", "BETA", "GAMMA", "HIGH GAMMA"]
-
+                
+                # Compute the accuracy for every band (including BROADBAND)
                 for k, band in tqdm(enumerate(bands), total = len(bands)):
 
                     df = []

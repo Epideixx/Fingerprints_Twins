@@ -8,7 +8,7 @@ ID_to_Name.csv
 Pre_Print
 Plots_Jason
 ARCHIVE
-OLD
+*OLD*
 Papers
 *.pptx
 Fingerprints.pdf
@@ -37,6 +37,10 @@ plots_Schaefer_30_sec.R
 neurochemicals_and_heritability_schaefer.ipynb
 temporary_file.ipynb
 decoding_HCP.ipynb
+
+Some_Plots_for_Presentation
+
+verifications.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
