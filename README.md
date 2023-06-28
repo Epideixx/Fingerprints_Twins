@@ -35,10 +35,14 @@ In addition to the provided data on this github repository, you will require :
 - to download the "Schaefer_30_second" folder if you want to run the analysis using the short segments and to upload it in "Data
 - to download the "Schaefer_artifacts_correction" folder if you want to run the analysis using the PSDs after regressing out the artifacts
 
+
+
 All the results to conduct the ananlyses can be computed  using **main.py** :
 
 Example :
+'''
 python3 main.py --acc True -- only_gt True 
+'''
 
 Here are the different parameters :
 - --acc : either if we compute the accuracy or not
