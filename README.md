@@ -40,9 +40,9 @@ In addition to the provided data on this github repository, you will require :
 All the results to conduct the ananlyses can be computed  using **main.py** :
 
 Example :
-'''
+```console
 python3 main.py --acc True -- only_gt True 
-'''
+```
 
 Here are the different parameters :
 - --acc : either if we compute the accuracy or not
