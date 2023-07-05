@@ -504,7 +504,7 @@ for (band in bands) {
 atlas <- read.csv('Data/Schaefer/Schaefer_atlas.csv')
 atlas$new_region <- paste(atlas$region, atlas$Yeo, sep= '_')
 
-ICC <- read.csv('Results_Log_Schaefer/Only_GT/PSD_ICC_Fingerprint/ICC.csv', header = TRUE)
+ICC <- read.csv('Results_Log_Schaefer/Only_GT/PSD_ICC_Fingerprint/ICC_without_twins.csv', header = TRUE)
 ICC <- ICC[-1]
 
 # Define X data as a data frame with the row means for each frequency band
@@ -836,3 +836,169 @@ for (i in 1000:10001){
   permuted_corr= c(permuted_corr, cor_temp$estimate)
 }
 sum(orig$estimate < permuted_corr)/10000
+
+
+# --------------------------------------
+#   CORR HERITABILITY ICC vs PEARSON
+# --------------------------------------
+
+
+H_icc <- read.csv('Results_Log_Schaefer/Only_GT/PSD_Heritability/icc/heritability.csv', header = TRUE)
+H_icc <- H_icc[-1]
+
+H_pearson <- read.csv('Results_Log_Schaefer/Only_GT/PSD_Heritability/pearson/heritability.csv', header = TRUE)
+H_pearson <- H_pearson[-1]
+
+# Define h data as a data frame with the row means for each frequency band
+h_icc <- data.frame(delta = rowMeans(H_icc[,1:8]), theta = rowMeans(H_icc[,9:16]), alpha = rowMeans(H_icc[,17:26]),
+                    beta = rowMeans(H_icc[,27:60]), gamma = rowMeans(H_icc[,61:100]), hgamma = rowMeans(H_icc[,101:301]))
+h_icc$broadband <- rowMeans((h_icc[1:6]))
+
+h_pearson <- data.frame(delta = rowMeans(H_pearson[,1:8]), theta = rowMeans(H_pearson[,9:16]), alpha = rowMeans(H_pearson[,17:26]),
+                        beta = rowMeans(H_pearson[,27:60]), gamma = rowMeans(H_pearson[,61:100]), hgamma = rowMeans(H_pearson[,101:301]))
+h_pearson$broadband <- rowMeans((h_pearson[1:6]))
+
+
+cor.test(h_icc$broadband, h_pearson$broadband)
+cor.test(h_icc$delta, h_pearson$delta)
+cor.test(h_icc$theta, h_pearson$theta)
+cor.test(h_icc$alpha, h_pearson$alpha)
+cor.test(h_icc$beta, h_pearson$beta)
+cor.test(h_icc$gamma, h_pearson$gamma)
+cor.test(h_icc$hgamma, h_pearson$hgamma)
+
+### P-value test ###
+shuffle_idx = read.csv("new_Data/permuted_indexes_of_schaefer_atlas_SPINs&Twirl.csv", header = TRUE)
+shuffle_idx = shuffle_idx[-1]
+
+orig_broadband=cor.test(h_icc$broadband, h_pearson$broadband)
+orig_delta=cor.test(h_icc$delta, h_pearson$delta)
+orig_theta=cor.test(h_icc$theta, h_pearson$theta)
+orig_alpha =cor.test(h_icc$alpha, h_pearson$alpha)
+orig_beta=cor.test(h_icc$beta, h_pearson$beta)
+orig_gamma=cor.test(h_icc$gamma, h_pearson$gamma)
+orig_hgamma=cor.test(h_icc$hgamma, h_pearson$hgamma)
+
+permuted_corr_brodband=c()
+permuted_corr_delta=c()
+permuted_corr_theta=c()
+permuted_corr_alpha=c()
+permuted_corr_beta=c()
+permuted_corr_gamma=c()
+permuted_corr_hgamma=c()
+
+for (i in 1:10000){
+  cor_temp = cor.test(h_icc$broadband, h_pearson$broadband[shuffle_idx[,i] + 1])
+  permuted_corr_brodband= c(permuted_corr_brodband, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$delta, h_pearson$delta[shuffle_idx[,i] + 1])
+  permuted_corr_delta = c(permuted_corr_delta, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$theta, h_pearson$theta[shuffle_idx[,i] + 1])
+  permuted_corr_theta= c(permuted_corr_theta, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$alpha, h_pearson$alpha[shuffle_idx[,i] + 1])
+  permuted_corr_alpha= c(permuted_corr_alpha, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$beta, h_pearson$beta[shuffle_idx[,i] + 1])
+  permuted_corr_beta= c(permuted_corr_beta, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$gamma, h_pearson$gamma[shuffle_idx[,i] + 1])
+  permuted_corr_gamma= c(permuted_corr_gamma, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$hgamma, h_pearson$hgamma[shuffle_idx[,i] + 1])
+  permuted_corr_hgamma= c(permuted_corr_hgamma, cor_temp$estimate)
+}
+
+sum(orig_broadband$estimate < permuted_corr_brodband)/10000
+sum(orig_delta$estimate < permuted_corr_delta)/10000
+sum(orig_theta$estimate < permuted_corr_theta)/10000
+sum(orig_alpha$estimate < permuted_corr_alpha)/10000
+sum(orig_beta$estimate < permuted_corr_beta)/10000
+sum(orig_gamma$estimate < permuted_corr_gamma)/10000
+sum(orig_hgamma$estimate < permuted_corr_hgamma)/10000
+
+
+
+
+# --------------------------------------
+#   CORR ICC With vs Without TWINS
+# --------------------------------------
+
+
+H_icc <- read.csv('Results_Log_Schaefer/Only_GT/PSD_Heritability/icc/heritability.csv', header = TRUE)
+H_icc <- H_icc[-1]
+
+H_pearson <- read.csv('Results_Log_Schaefer/Only_GT/PSD_Heritability/pearson/heritability.csv', header = TRUE)
+H_pearson <- H_pearson[-1]
+
+# Define h data as a data frame with the row means for each frequency band
+h_icc <- data.frame(delta = rowMeans(H_icc[,1:8]), theta = rowMeans(H_icc[,9:16]), alpha = rowMeans(H_icc[,17:26]),
+                    beta = rowMeans(H_icc[,27:60]), gamma = rowMeans(H_icc[,61:100]), hgamma = rowMeans(H_icc[,101:301]))
+h_icc$broadband <- rowMeans((h_icc[1:6]))
+
+h_pearson <- data.frame(delta = rowMeans(H_pearson[,1:8]), theta = rowMeans(H_pearson[,9:16]), alpha = rowMeans(H_pearson[,17:26]),
+                        beta = rowMeans(H_pearson[,27:60]), gamma = rowMeans(H_pearson[,61:100]), hgamma = rowMeans(H_pearson[,101:301]))
+h_pearson$broadband <- rowMeans((h_pearson[1:6]))
+
+
+cor.test(h_icc$broadband, h_pearson$broadband)
+cor.test(h_icc$delta, h_pearson$delta)
+cor.test(h_icc$theta, h_pearson$theta)
+cor.test(h_icc$alpha, h_pearson$alpha)
+cor.test(h_icc$beta, h_pearson$beta)
+cor.test(h_icc$gamma, h_pearson$gamma)
+cor.test(h_icc$hgamma, h_pearson$hgamma)
+
+### P-value test ###
+shuffle_idx = read.csv("new_Data/permuted_indexes_of_schaefer_atlas_SPINs&Twirl.csv", header = TRUE)
+shuffle_idx = shuffle_idx[-1]
+
+orig_broadband=cor.test(h_icc$broadband, h_pearson$broadband)
+orig_delta=cor.test(h_icc$delta, h_pearson$delta)
+orig_theta=cor.test(h_icc$theta, h_pearson$theta)
+orig_alpha =cor.test(h_icc$alpha, h_pearson$alpha)
+orig_beta=cor.test(h_icc$beta, h_pearson$beta)
+orig_gamma=cor.test(h_icc$gamma, h_pearson$gamma)
+orig_hgamma=cor.test(h_icc$hgamma, h_pearson$hgamma)
+
+permuted_corr_brodband=c()
+permuted_corr_delta=c()
+permuted_corr_theta=c()
+permuted_corr_alpha=c()
+permuted_corr_beta=c()
+permuted_corr_gamma=c()
+permuted_corr_hgamma=c()
+
+for (i in 1:10000){
+  cor_temp = cor.test(h_icc$broadband, h_pearson$broadband[shuffle_idx[,i] + 1])
+  permuted_corr_brodband= c(permuted_corr_brodband, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$delta, h_pearson$delta[shuffle_idx[,i] + 1])
+  permuted_corr_delta = c(permuted_corr_delta, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$theta, h_pearson$theta[shuffle_idx[,i] + 1])
+  permuted_corr_theta= c(permuted_corr_theta, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$alpha, h_pearson$alpha[shuffle_idx[,i] + 1])
+  permuted_corr_alpha= c(permuted_corr_alpha, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$beta, h_pearson$beta[shuffle_idx[,i] + 1])
+  permuted_corr_beta= c(permuted_corr_beta, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$gamma, h_pearson$gamma[shuffle_idx[,i] + 1])
+  permuted_corr_gamma= c(permuted_corr_gamma, cor_temp$estimate)
+  
+  cor_temp = cor.test(h_icc$hgamma, h_pearson$hgamma[shuffle_idx[,i] + 1])
+  permuted_corr_hgamma= c(permuted_corr_hgamma, cor_temp$estimate)
+}
+
+sum(orig_broadband$estimate < permuted_corr_brodband)/10000
+sum(orig_delta$estimate < permuted_corr_delta)/10000
+sum(orig_theta$estimate < permuted_corr_theta)/10000
+sum(orig_alpha$estimate < permuted_corr_alpha)/10000
+sum(orig_beta$estimate < permuted_corr_beta)/10000
+sum(orig_gamma$estimate < permuted_corr_gamma)/10000
+sum(orig_hgamma$estimate < permuted_corr_hgamma)/10000
+
+

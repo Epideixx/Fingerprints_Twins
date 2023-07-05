@@ -1,0 +1,398 @@
+---
+title: "Anatomical_variation"
+output: html_document
+date: "2023-05-16"
+---
+
+```{r read in data and organize into one big marix DKA }
+library(ggplot2)
+library(dplyr)
+library(BayesFactor)
+library(ggseg)
+library(ggsegDesterieux)
+library(colorspace)
+
+cbbPalette= c("#4f89e0", "#f5ec6c",'#156605',"#76D7C4","#268236", '#4d3d87','#593d80', '#3b49e3')
+
+demo=read.csv('~/Documents/CAMCAN_outputs/CAMCAN_Analysis/standard_data.csv')
+demo2=read.csv('~/Desktop/Xiaobo_age_data/fulldemo_fromCAMCAN_test.csv')
+demo$CCID=paste('sub',demo$CCID, sep = '_')
+ids=read.csv('~/Documents/CAMCAN_outputs/CAMCAN_Analysis/subject_codes.csv')
+index=demo$CCID %in% ids$Ids
+demo=demo[index,]
+
+demo$Group[demo$Age>=18 & demo$Age <45]= "young adult"
+demo$Group[demo$Age>=45 & demo$Age <65]= "adult"
+demo$Group[demo$Age>=65 & demo$Age <90]= "older adult"
+
+full_demo=read.csv('~/Documents/CAMCAN_outputs/approved_data.csv')
+full_demo$CCID=paste('sub',full_demo$CCID, sep = '_')
+index=full_demo$CCID %in% ids$Ids
+full_demo=full_demo[index,]
+
+# hcp demo
+subj_HC= read.csv('~/Documents/HCP_twin_projec/outputs/subject_codes.csv')
+demo_twin= read.csv('~/Documents/HCP_twin_projec/ID_to_Name.csv', header = TRUE)
+
+demo_hcp= read.csv('~/Documents/HCP_twin_projec/HCP_zygocity_just_key_measures.csv', header = TRUE)
+
+demo_hcp= demo_hcp[demo_hcp$Subject %in%  subj_HC$Ids,]
+order=  demo_hcp$Subject %in%  subj_HC$Ids
+demo_hcp= demo_hcp[ order(subj_HC$Ids),]
+
+demo_hcp$twin_ID=demo_twin$New_Name[order(demo_twin$ID)]
+demo_hcp$Group= substr(demo_hcp$twin_ID, start = 6, stop=7)
+
+demo_hcp$Group = plyr::mapvalues(demo_hcp$Group, c('MZ', 'DZ', 'in'), c('MZ', 'DZ', 'NotTwin'))
+
+
+demo_hcp_MZ= demo_hcp[demo_hcp$Group=='MZ',]
+demo_hcp_MZ= demo_hcp_MZ[order(demo_hcp_MZ$twin_ID),]
+
+demo_hcp_DZ= demo_hcp[demo_hcp$Group=='DZ',]
+demo_hcp_DZ= demo_hcp_DZ[order(demo_hcp_DZ$twin_ID),]
+
+# read data and compute data for demographic table
+psd_1=read.csv('~/Documents/HCP_twin_projec/DKA_PSD_m1.csv', header = FALSE)
+psd_2=read.csv('~/Documents/HCP_twin_projec/DKA_PSD_m2.csv', header = FALSE)
+psd_3=read.csv('~/Documents/HCP_twin_projec/DKA_PSD_m3.csv', header = FALSE)
+
+atlas= read.csv('~/Desktop/dka_HCP_test.csv')
+
+setwd('/Users/jason/Documents/HCP_twin_projec/Freesurfstats/')
+subjanat= list.dirs('./')
+subjanat= subjanat[-1]
+subjects=substr(subjanat, start=4, stop = 15)
+
+anatomy=matrix(nrow = 89, ncol = 9*68)
+count=1;
+
+# loop through files and read anat stats left 
+for(i in subjects ){
+  
+  data_temp=matrix(nrow = 68, ncol = 9)
+
+  file=paste('/Users/jason/Documents/HCP_twin_projec/Freesurfstats/', i, '/lh.aparc.stats', sep='')
+  data_L=read_freesurfer_stats(file)
+  data_L=data_L[order(data_L$label),]
+    file=paste('/Users/jason/Documents/HCP_twin_projec/Freesurfstats/', i, '/rh.aparc.stats', sep='')
+  data_R=read_freesurfer_stats(file)
+  data_R=data_R[order(data_R$label),]
+  data_temp[seq(1,68,2),]=as.matrix(data_L[,2:10])
+  data_temp[seq(2,68,2),]=as.matrix(data_R[,2:10])
+  anatomy[count,]= as.vector(t(data_temp))
+
+  count=count+1
+}
+
+write.csv(anatomy, file='~/Documents/HCP_twin_projec/anatomy_matrix_subjects.csv')
+
+
+```
+
+
+
+```{r compute similarity matrix for sturcture and function }
+
+index= order(demo_hcp$Family_ID)
+
+demo_hcp_sort=demo_hcp[index,]
+corr_psd_1=cor(t(psd_1[index,]),t(psd_2[index,])) 
+corr_psd_2=cor(t(psd_2[index,]),t(psd_3[index,])) 
+corr_psd_3=cor(t(psd_1[index,]),t(psd_3[index,])) 
+
+corr_psd= (1/3)*(corr_psd_1 + corr_psd_2 + corr_psd_3)
+
+corr_anat=cor(t(anatomy[index,]))
+diag(corr_anat)=NA
+
+data4plot=cbind(stack(as.data.frame(corr_anat)), rep(1:89, each=89), rep(1:89, 89))
+
+colnames(data4plot)[3:4]= c('Y', 'X')
+
+data4plot$values[data4plot$values < 0.9] =0.9
+
+ggplot(data4plot, aes(X, Y, fill= values)) + 
+  geom_tile() + scale_y_reverse()+  theme_void() + colorspace::scale_fill_continuous_sequential(palette= 'Plasma', rev= FALSE, limits= c(0.9, 1))
+
+ggsave('~/Documents/HCP_twin_projec/figures/Corr_matrix_all_people_anatomy.pdf', device = "pdf", width = 5, height = 5)
+
+
+data4plot=cbind(stack(as.data.frame(corr_psd)), rep(1:89, each=89), rep(1:89, 89))
+
+colnames(data4plot)[3:4]= c('Y', 'X')
+
+data4plot$values[data4plot$values < 0.7] =0.7
+
+ggplot(data4plot, aes(X, Y, fill= values)) + 
+  geom_tile() + scale_y_reverse()+  theme_void() + colorspace::scale_fill_continuous_sequential(palette= 'Plasma', rev= FALSE, limits= c(0.7, 1))
+
+ggsave('~/Documents/HCP_twin_projec/figures/Corr_matrix_all_people_PSD.pdf', device = "pdf", width = 5, height = 5)
+
+data4regression = data.frame(psd_similarity= as.vector(corr_psd), anat_similarity=as.vector(corr_anat), subj1= rep(demo_hcp_sort$Subject,89), subj2= rep(demo_hcp_sort$Subject,each=89), family1= rep(demo_hcp_sort$Family_ID, each=89), family2= rep(demo_hcp_sort$Family_ID,89), groupGT= rep(demo_hcp_sort$ZygosityGT,89), groupSR= rep(demo_hcp_sort$ZygositySR,89))
+
+data4regression= data4regression[!is.na(data4regression$anat_similarity),]
+data4regression$anat_similarity[data4regression$anat_similarity==1]= 0.99
+
+# not related 
+cor.test(DescTools::FisherZ(data4regression$psd_similarity), DescTools::FisherZ(data4regression$anat_similarity))
+
+siblings= data4regression[data4regression$family1 == data4regression$family2,]
+
+unrelated= data4regression[data4regression$family1 != data4regression$family2,]
+
+cor.test(DescTools::FisherZ(siblings$psd_similarity[siblings$groupGT== 'MZ']), DescTools::FisherZ(siblings$anat_similarity[siblings$groupGT== 'MZ']))
+
+cor.test(DescTools::FisherZ(siblings$psd_similarity[siblings$groupGT== 'DZ']), DescTools::FisherZ(siblings$anat_similarity[siblings$groupGT== 'DZ']))
+
+
+cbbPalette= c( '#B73779', '#FC8961', '#51127C')
+
+siblings2= siblings[siblings$groupGT != ' ',]
+ggplot(siblings2, aes(x=DescTools::FisherZ(siblings2$psd_similarity) , y = DescTools::FisherZ(siblings2$anat_similarity), fill=groupGT, color=groupGT, Group=groupGT)) + 
+  geom_jitter(size=4) + 
+  stat_smooth(method = "lm", colour = 'black',fullrange = T) + scale_fill_manual(values=cbbPalette)  + scale_colour_manual(values=cbbPalette)+ 
+  ggpubr::theme_classic2() +   ylab("anatomical similarity") + xlab("psd similairty")+
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"), legend.position = "none")  + coord_cartesian(ylim = c(0,4)) + facet_wrap(~groupGT)
+
+ggsave('~/Documents/HCP_twin_projec/figures/Scatter_similarity_of_psd_and_anatomy.pdf', device = "pdf", width = 15, height = 5)
+
+# make box plot 
+
+data4boxplot = data.frame(values= c(siblings$anat_similarity[siblings$groupGT == "MZ"], siblings$anat_similarity[siblings$groupGT == "DZ"], unrelated$anat_similarity), group= c(rep("MZ", 34), rep("DZ", 22), rep("unrelated", 7766)))
+
+data4boxplot$group = factor(data4boxplot$group, levels = c('MZ', 'DZ', 'unrelated'))
+ggplot(data=data4boxplot, aes(x=group, y=DescTools::FisherZ(values), fill=group, width=.5)) + geom_boxplot() +ggpubr::theme_classic2() + labs(y="anatomical other-similarity", x="",title="") +  theme(text = element_text(size=40), legend.position = 'none', legend.title=element_blank()) + coord_cartesian(ylim = c(1.5, 3.5)) + scale_color_manual(values=cbbPalette) + scale_fill_manual(values=cbbPalette) 
+
+ggsave('~/Documents/HCP_twin_projec/figures/Anatomy_other_corr_boxplot.pdf', device = "pdf", width=8, height=8, dpi=800)
+
+
+
+
+```
+
+
+
+```{r alpha bandsimilarity matrix for sturcture and function }
+
+index= order(demo_hcp$Family_ID)
+
+index_alpha= unlist(lapply(1:68, function(x) ((x-1)*300)+(17:26)))
+  
+
+demo_hcp_sort=demo_hcp[index, ]
+corr_psd_1=cor(t(psd_1[index,index_alpha]),t(psd_2[index,index_alpha])) 
+corr_psd_2=cor(t(psd_2[index,index_alpha]),t(psd_3[index,index_alpha])) 
+corr_psd_3=cor(t(psd_1[index,index_alpha]),t(psd_3[index,index_alpha])) 
+
+corr_psd= (1/3)*(corr_psd_1 + corr_psd_2 + corr_psd_3)
+
+corr_anat=cor(t(anatomy[index,]))
+diag(corr_anat)=NA
+
+data4regression = data.frame(psd_similarity= as.vector(corr_psd), anat_similarity=as.vector(corr_anat), subj1= rep(demo_hcp_sort$Subject,89), subj2= rep(demo_hcp_sort$Subject,each=89), family1= rep(demo_hcp_sort$Family_ID, each=89), family2= rep(demo_hcp_sort$Family_ID,89), groupGT= rep(demo_hcp_sort$ZygosityGT,89), groupSR= rep(demo_hcp_sort$ZygositySR,89))
+
+data4regression= data4regression[!is.na(data4regression$anat_similarity),]
+data4regression$anat_similarity[data4regression$anat_similarity==1]= 0.99
+
+# not related 
+cor.test(DescTools::FisherZ(data4regression$psd_similarity), DescTools::FisherZ(data4regression$anat_similarity))
+
+siblings= data4regression[data4regression$family1 == data4regression$family2,]
+
+unrelated= data4regression[data4regression$family1 != data4regression$family2,]
+
+cor.test(DescTools::FisherZ(siblings$psd_similarity[siblings$groupGT== 'MZ']), DescTools::FisherZ(siblings$anat_similarity[siblings$groupGT== 'MZ']))
+
+cor.test(DescTools::FisherZ(siblings$psd_similarity[siblings$groupGT== 'DZ']), DescTools::FisherZ(siblings$anat_similarity[siblings$groupGT== 'DZ']))
+
+
+cbbPalette= c( '#B73779', '#FC8961', '#51127C')
+
+siblings2= siblings[siblings$groupGT != ' ',]
+ggplot(siblings2, aes(x=DescTools::FisherZ(siblings2$psd_similarity) , y = DescTools::FisherZ(siblings2$anat_similarity), fill=groupGT, color=groupGT, Group=groupGT)) + 
+  geom_jitter(size=4) + 
+  stat_smooth(method = "lm", colour = 'black',fullrange = T) + scale_fill_manual(values=cbbPalette)  + scale_colour_manual(values=cbbPalette)+ 
+  ggpubr::theme_classic2() +   ylab("anatomical similarity") + xlab("psd similairty")+
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"), legend.position = "none")  + coord_cartesian(ylim = c(0,4)) + facet_wrap(~groupGT)
+
+ggsave('~/Documents/HCP_twin_projec/figures/Scatter_similarity_of_psd_and_anatomy_alpha_band.pdf', device = "pdf", width = 15, height = 5)
+
+
+```
+
+
+```{r beta bandsimilarity matrix for sturcture and function }
+
+index= order(demo_hcp$Family_ID)
+
+index_beta= unlist(lapply(1:68, function(x) ((x-1)*300)+(27:60)))
+  
+
+demo_hcp_sort=demo_hcp[index, ]
+corr_psd_1=cor(t(psd_1[index,index_beta]),t(psd_2[index,index_beta])) 
+corr_psd_2=cor(t(psd_2[index,index_beta]),t(psd_3[index,index_beta])) 
+corr_psd_3=cor(t(psd_1[index,index_beta]),t(psd_3[index,index_beta])) 
+
+corr_psd= (1/3)*(corr_psd_1 + corr_psd_2 + corr_psd_3)
+
+corr_anat=cor(t(anatomy[index,]))
+diag(corr_anat)=NA
+
+data4regression = data.frame(psd_similarity= as.vector(corr_psd), anat_similarity=as.vector(corr_anat), subj1= rep(demo_hcp_sort$Subject,89), subj2= rep(demo_hcp_sort$Subject,each=89), family1= rep(demo_hcp_sort$Family_ID, each=89), family2= rep(demo_hcp_sort$Family_ID,89), groupGT= rep(demo_hcp_sort$ZygosityGT,89), groupSR= rep(demo_hcp_sort$ZygositySR,89))
+
+data4regression= data4regression[!is.na(data4regression$anat_similarity),]
+data4regression$anat_similarity[data4regression$anat_similarity==1]= 0.99
+
+# not related 
+cor.test(DescTools::FisherZ(data4regression$psd_similarity), DescTools::FisherZ(data4regression$anat_similarity))
+
+siblings= data4regression[data4regression$family1 == data4regression$family2,]
+
+unrelated= data4regression[data4regression$family1 != data4regression$family2,]
+
+cor.test(DescTools::FisherZ(siblings$psd_similarity[siblings$groupGT== 'MZ']), DescTools::FisherZ(siblings$anat_similarity[siblings$groupGT== 'MZ']))
+
+cor.test(DescTools::FisherZ(siblings$psd_similarity[siblings$groupGT== 'DZ']), DescTools::FisherZ(siblings$anat_similarity[siblings$groupGT== 'DZ']))
+
+
+cbbPalette= c( '#B73779', '#FC8961', '#51127C')
+
+siblings2= siblings[siblings$groupGT != ' ',]
+ggplot(siblings2, aes(x=DescTools::FisherZ(siblings2$psd_similarity) , y = DescTools::FisherZ(siblings2$anat_similarity), fill=groupGT, color=groupGT, Group=groupGT)) + 
+  geom_jitter(size=4) + 
+  stat_smooth(method = "lm", colour = 'black',fullrange = T) + scale_fill_manual(values=cbbPalette)  + scale_colour_manual(values=cbbPalette)+ 
+  ggpubr::theme_classic2() +   ylab("anatomical similarity") + xlab("psd similairty")+
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=14,face="bold"), legend.position = "none")  + coord_cartesian(ylim = c(0,4)) + facet_wrap(~groupGT)
+
+ggsave('~/Documents/HCP_twin_projec/figures/Scatter_similarity_of_psd_and_anatomy_beta_band.pdf', device = "pdf", width = 15, height = 5)
+
+
+
+
+```
+
+
+
+# repeat above analysis with aperiodic only similairty 
+
+```{r heritability of anatomy  }
+
+h2_anat=read.csv('/Users/jason/Documents/HCP_twin_projec/heritability_of_anatomy.csv')
+
+h2_anat=h2_anat[-1]
+
+h2_anat=matrix(as.vector(h2_anat$all), nrow = 68, byrow = TRUE)
+
+atlas= read.csv('~/Desktop/dka_HCP_test.csv')
+
+atlas$heri_all= rowMeans(h2_anat)
+
+atlas %>%
+  brain_join(dk) %>% 
+  reposition_brain(hemi ~ side) %>% 
+  ggplot(aes(fill =heri_all)) + 
+  geom_sf(show.legend = TRUE) + 
+  scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE) +
+  theme_void() + scale_color_manual('white')
+
+ggsave('~/Documents/HCP_twin_projec/figures/Schaefer_anatomical_heritability.pdf', device = "pdf")
+
+
+atlas$heri_thicc= h2_anat[,4]
+
+atlas %>%
+  brain_join(dk) %>% 
+  reposition_brain(hemi ~ side) %>% 
+  ggplot(aes(fill =heri_thicc)) + 
+  geom_sf(show.legend = TRUE) + 
+  scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE) +
+  theme_void() + scale_color_manual('white')
+
+ggsave('~/Documents/HCP_twin_projec/figures/Schaefer_thickness_heritability.pdf', device = "pdf")
+
+# set colour palette
+cbbPalette= c("#DBF132", "#15A705",'#4F89E0',"#D81B99",'#4d3d87','#115d80', '#FF0000')
+
+ggplot(atlas, aes(network, heri_all, fill=network)) + 
+  ggdist::stat_halfeye(adjust = .5, width = .1, .width = 0, justification = -.5, alpha=0.5, point_alpha= 0) + geom_boxplot(width = .3, outlier.shape = NA, colour= '#888888') + ggpubr::theme_classic2() + scale_fill_manual(values=cbbPalette) 
+
+ggsave('~/Documents/HCP_twin_projec/figures/Scahefer_box_plot_anatomical_h2.pdf', device = "pdf")
+
+
+# set colour palette
+cbbPalette= c("#DBF132", "#15A705",'#4F89E0',"#D81B99",'#4d3d87','#115d80', '#FF0000', '#E9B475', '#445B43')
+
+data4plot= data.frame(values= as.vector(h2_anat), feats= rep(c("NumVertex","SurfArea", "GrayVolume",  "ThickAvg", "ThickStd","MeanCurv", "GausCurv", "FoldInd",  "CurvInd"), each= 68))
+
+ggplot(data4plot, aes(feats, values, fill=feats)) + 
+  ggdist::stat_halfeye(adjust = .5, width = .1, .width = 0, justification = -.5, alpha=0.5, point_alpha= 0) + geom_boxplot(width = .3, outlier.shape = NA, colour= '#888888') + ggpubr::theme_classic2() + scale_fill_manual(values=cbbPalette) 
+
+ggsave('~/Documents/HCP_twin_projec/figures/Scahefer_box_plot_anatomical_h2_by_feature.pdf', device = "pdf")
+
+
+```
+
+
+
+
+```{r spatial relationships with ICC}
+
+ICC= read.csv('~/Documents/HCP_twin_projec/ICC_DKA.csv', header = TRUE)
+
+ICC=ICC[,-1]
+
+# Define X and Y data
+X=data.frame(delta= rowMeans(ICC[,1:8]),theta= rowMeans(ICC[,9:16]),alpha= rowMeans(ICC[,17:26]),
+             beta= rowMeans(ICC[,27:60]), gamma= rowMeans(ICC[,61:100]), hgamma= rowMeans(ICC[,101:301]))
+
+
+cor.test(atlas$heri_all, rowMeans(X))
+
+permuted_index= read.csv('~/Documents/CAMCAN_outputs/neuromaps/permuted_indexes_of_dk_atlas.csv')
+permuted_index= permuted_index[,-1]
+permuted_index=permuted_index+1
+
+
+orig=cor.test(atlas$heri_all, rowMeans(X))
+permuted_corr=c()
+for (i in 1:1000){
+  
+  cor_temp=cor.test(atlas$heri_all, rowMeans(X)[permuted_index[,i]])
+  permuted_corr= c(permuted_corr, cor_temp$estimate)
+  
+}
+sum(orig$estimate > permuted_corr)/1000
+# permuted p value = 0.154
+
+cor.test(atlas$heri_all, X$alpha)
+
+orig=cor.test(atlas$heri_all, X$alpha)
+permuted_corr=c()
+for (i in 1:1000){
+  
+  cor_temp=cor.test(atlas$heri_all, X$alpha[permuted_index[,i]])
+  permuted_corr= c(permuted_corr, cor_temp$estimate)
+  
+}
+sum(orig$estimate > permuted_corr)/1000
+# permuted p value = 0.08
+
+cor.test(atlas$heri_all, X$beta)
+
+orig=cor.test(atlas$heri_all, X$beta)
+permuted_corr=c()
+for (i in 1:1000){
+  
+  cor_temp=cor.test(atlas$heri_all, X$beta[permuted_index[,i]])
+  permuted_corr= c(permuted_corr, cor_temp$estimate)
+  
+}
+sum(orig$estimate > permuted_corr)/1000
+# permuted p value = 0.023
+
+
+```
