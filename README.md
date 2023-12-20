@@ -2,8 +2,7 @@
 
 ## Introduction
 
-Brain-fingerprint is a novel technique used to explore the inter-individual differrences in the brain. We are capable of accurately differentiating individuals in a cohort based only on the resting-stage spectral brain activy using magnetoencephalography (MEG).
-However, the influence of genes on those differences remain unknown.
+Brain-fingerprint is a novel technique used to explore the inter-individual differrences in the brain activity. Previous research demonstrates that we are capable of accurately differentiating individuals in a cohort based solely on the resting-stage spectral brain activy using magnetoencephalography (MEG). However, the influence of genes on those differences remain unexplored.
 We thus explored how heritable were the fingerprints, and what genes relate to it.
 
 ## Description of the project
@@ -20,18 +19,27 @@ Here are the different steps we did :
 
 All of those steps are merged together in main.py
 
-Finally, statistical analyses and plots were performed : plots_Schaefer.R
+Statistical analyses and plots were performed : plots_Schaefer.R
+
+We additionally ran a PLS analysis to relate salient features for participant differentiation (ICC) to gene expression from the [AHBA](https://human.brain-map.org) (see XXXXXX and [Hansen et al 2021](https://github.com/netneurolab/hansen_genescognition)
 
 
 ## Results
 
-See Preprint : LINK
+In short we found that:
+  - Monozygotic, but not dizygotic twins can be differentiated from their sibling's brain-fingerprint
+  - brain-fingerprints, principally in the alpha and beta bands, are heritable
+  - salient electrophysiological features for participant differentiation coavry with a gradient of gene expression
+  - this gradient of gene expression is enriched for ion transport genes, expressed in neurons, and becomes more pronounced across neurodevelopment
 
+## Manuscript and Citation
+
+This work is presented in XXXXX. Please cite XXXXX
 
 ## How to use this repository
 
 In addition to the provided data on this github repository, you will require :
-- to request the access to the resticted data for the dataset for the MEG subjects (https://db.humanconnectome.org/), and add the non-resticted data to the folder "Data" as "All_Data.csv", as well as the restricted dataset containing the information for the twin pairs, to name "All_Data_RESTRICTED.csv".
+- to request the access to the [resticted data for the dataset for the MEG subjects](https://db.humanconnectome.org/), and add the non-resticted data to the folder "Data" as "All_Data.csv", as well as the restricted dataset containing the information for the twin pairs, to name "All_Data_RESTRICTED.csv".
 - to download the "Schaefer_30_second" folder if you want to run the analysis using the short segments and to upload it in "Data
 - to download the "Schaefer_artifacts_correction" folder if you want to run the analysis using the PSDs after regressing out the artifacts
 
