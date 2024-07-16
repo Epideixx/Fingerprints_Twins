@@ -2,8 +2,7 @@
 
 ## Introduction
 
-Brain-fingerprint is a novel technique used to explore the inter-individual differrences in the brain activity. Previous research demonstrates that we are capable of accurately differentiating individuals in a cohort based solely on the resting-stage spectral brain activy using magnetoencephalography (MEG). However, the influence of genes on those differences remain unexplored.
-We thus explored how heritable were the fingerprints, and what genes relate to it.
+Brain-fingerprint is a novel technique used to explore the inter-individual differrences in the brain activity. Previous research demonstrates that we are capable of accurately differentiating individuals in a cohort based solely on the resting-stage spectral brain activy using magnetoencephalography (MEG). How these fingerprints are influenced by genetics remains to be demonstrated. Here, we  explored the heritablility of brain-fingerprints and their alignment with cortical patterns of gene expression.
 
 ## Description of the project
 
@@ -21,7 +20,7 @@ All of those steps are merged together in main.py
 
 Statistical analyses and plots were performed : plots_Schaefer.R
 
-We additionally ran a PLS analysis to relate salient features for participant differentiation (ICC) to gene expression from the [AHBA](https://human.brain-map.org) (see XXXXXX and [Hansen et al 2021](https://github.com/netneurolab/hansen_genescognition)
+We additionally ran a PLS analysis to relate salient features for participant differentiation (ICC) to gene expression from the [AHBA](https://human.brain-map.org) (see XXXXXX and [Hansen et al 2021](https://github.com/netneurolab/hansen_genescognition). Code for the PLS analysis can be found in the PLS_Code folder.
 
 
 ## Results
@@ -42,7 +41,6 @@ In addition to the provided data on this github repository, you will require :
 - to request the access to the [resticted data for the dataset for the MEG subjects](https://db.humanconnectome.org/), and add the non-resticted data to the folder "Data" as "All_Data.csv", as well as the restricted dataset containing the information for the twin pairs, to name "All_Data_RESTRICTED.csv".
 - to download the "Schaefer_30_second" folder if you want to run the analysis using the short segments and to upload it in "Data
 - to download the "Schaefer_artifacts_correction" folder if you want to run the analysis using the PSDs after regressing out the artifacts
-
 
 
 All the results to conduct the ananlyses can be computed  using **main.py** :
