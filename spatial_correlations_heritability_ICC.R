@@ -8,11 +8,6 @@ library(ggsegSchaefer)
 library(ggpubr)
 
 
-
-# # # # # # # # # # # # # # # # # # # # # # #
-## plot the schaefer atlas
-## plot the Schaefer
-
 ########################## Schaefer atlas PSD #######################################
 
 library(ggsegSchaefer)
@@ -26,7 +21,7 @@ atlas$Lbeta= rowMeans(log10(psd_1[,27:60]))
 atlas$Lgamma= rowMeans(log10(psd_1[,61:100]))
 atlas$LHgamma= rowMeans(log10(psd_1[,101:301]))
 
-
+# plot delta power topo
 atlas %>% 
   brain_join(schaefer7_200) %>% 
   reposition_brain(hemi ~ side) %>% 
@@ -34,9 +29,9 @@ atlas %>%
   geom_sf(show.legend = TRUE) + scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE) +
   theme_void() + scale_color_manual('white') 
 
-
-atlas[,35:40]= lapply(atlas[,35:40], scales::rescale)
-data4plot=cbind(stack(atlas[,35:40]), atlas[,6:7])
+# pick out colmuns to plot topomaps per band
+atlas[,37:42]= lapply(atlas[,37:42], scales::rescale)
+data4plot=cbind(stack(atlas[,37:42]), atlas[,6:7])
 colnames(data4plot)[3]= 'region'
 
 data4plot %>% group_by(ind) %>%
@@ -46,123 +41,11 @@ data4plot %>% group_by(ind) %>%
   geom_sf(show.legend = TRUE) + scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE) +
   theme_void() + scale_color_manual('white') + facet_wrap( ~ ind )
 
-ggsave('~/Documents/HCP_twin_projec/figures/Scahefer_Brain_map_power.pdf', device = "pdf")
+#ggsave('~/Documents/HCP_twin_projec/figures/Scahefer_Brain_map_power.pdf', device = "pdf")
 
+# topos of narrow band power look normal
 
-
-# set colour palette
-cbbPalette= c("#DBF132", "#15A705",'#4F89E0',"#D81B99",'#4d3d87','#115d80', '#FF0000')
-atlas[,35:40]= lapply(atlas[,35:40], scales::rescale)
-
-data4plot=cbind(stack(atlas[,35:40]), atlas[,5:7])
-colnames(data4plot)[4]= 'region'
-
-ggplot(data4plot, aes(values, Yeo, fill=Yeo)) + 
-  ggdist::stat_halfeye(adjust = .5, width = .1, .width = 0, justification = -.5, alpha=0.5, point_alpha= 0) + 
-  geom_boxplot(width = .3, outlier.shape = NA, colour= '#888888') + ggpubr::theme_classic2() + scale_fill_manual(values=cbbPalette) + facet_wrap(~ ind)
-
-ggsave('~/Documents/HCP_twin_projec/figures/Scahefer_box_plot_power.pdf', device = "pdf")
-
-
-atlas= read.csv('~/Desktop/Schaefer_neuromaps/Schaefer2018_200Parcels_7Networks_Neuromaps.csv')
-
-psd_2= read.csv('~/Documents/HCP_twin_projec/outputs/Scaefer_PSD_m2_participantmean.csv', header = FALSE)
-atlas$Ldelta= rowMeans(log10(psd_2[,1:8]))
-atlas$Ltheta= rowMeans(log10(psd_2[,9:16]))
-atlas$Lalpha= rowMeans(log10(psd_2[,17:26]))
-atlas$Lbeta= rowMeans(log10(psd_2[,27:60]))
-atlas$Lgamma= rowMeans(log10(psd_2[,61:100]))
-atlas$LHgamma= rowMeans(log10(psd_2[,101:301]))
-
-
-atlas %>% 
-  brain_join(schaefer7_200) %>% 
-  reposition_brain(hemi ~ side) %>% 
-  ggplot(aes(fill =Lbeta)) + 
-  geom_sf(show.legend = TRUE) + scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE) +
-  theme_void() + scale_color_manual('white') 
-
-
-atlas[,35:40]= lapply(atlas[,35:40], scales::rescale)
-data4plot=cbind(stack(atlas[,35:40]), atlas[,6:7])
-colnames(data4plot)[3]= 'region'
-
-data4plot %>% group_by(ind) %>%
-  brain_join(schaefer7_200) %>% 
-  reposition_brain(hemi ~ side) %>% 
-  ggplot(aes(fill =values)) + 
-  geom_sf(show.legend = TRUE) + scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE) +
-  theme_void() + scale_color_manual('white') + facet_wrap( ~ ind )
-
-ggsave('~/Documents/HCP_twin_projec/figures/Scahefer_Brain_map_power_2.pdf', device = "pdf")
-
-
-
-# set colour palette
-cbbPalette= c("#DBF132", "#15A705",'#4F89E0',"#D81B99",'#4d3d87','#115d80', '#FF0000')
-atlas[,35:40]= lapply(atlas[,35:40], scales::rescale)
-
-data4plot=cbind(stack(atlas[,35:40]), atlas[,5:7])
-colnames(data4plot)[4]= 'region'
-
-ggplot(data4plot, aes(values, Yeo, fill=Yeo)) + 
-  ggdist::stat_halfeye(adjust = .5, width = .1, .width = 0, justification = -.5, alpha=0.5, point_alpha= 0) + 
-  geom_boxplot(width = .3, outlier.shape = NA, colour= '#888888') + ggpubr::theme_classic2() + scale_fill_manual(values=cbbPalette) + facet_wrap(~ ind)
-
-ggsave('~/Documents/HCP_twin_projec/figures/Scahefer_box_plot_power_2.pdf', device = "pdf")
-
-
-
-
-atlas= read.csv('~/Desktop/Schaefer_neuromaps/Schaefer2018_200Parcels_7Networks_Neuromaps.csv')
-
-psd_3= read.csv('~/Documents/HCP_twin_projec/outputs/Scaefer_PSD_m3_participantmean.csv', header = FALSE)
-atlas$Ldelta= rowMeans(log10(psd_3[,1:8]))
-atlas$Ltheta= rowMeans(log10(psd_3[,9:16]))
-atlas$Lalpha= rowMeans(log10(psd_3[,17:26]))
-atlas$Lbeta= rowMeans(log10(psd_3[,27:60]))
-atlas$Lgamma= rowMeans(log10(psd_3[,61:100]))
-atlas$LHgamma= rowMeans(log10(psd_3[,101:301]))
-
-
-atlas %>% 
-  brain_join(schaefer7_200) %>% 
-  reposition_brain(hemi ~ side) %>% 
-  ggplot(aes(fill =Lbeta)) + 
-  geom_sf(show.legend = TRUE) + scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE) +
-  theme_void() + scale_color_manual('white') 
-
-
-atlas[,35:40]= lapply(atlas[,35:40], scales::rescale)
-data4plot=cbind(stack(atlas[,35:40]), atlas[,6:7])
-colnames(data4plot)[3]= 'region'
-
-data4plot %>% group_by(ind) %>%
-  brain_join(schaefer7_200) %>% 
-  reposition_brain(hemi ~ side) %>% 
-  ggplot(aes(fill =values)) + 
-  geom_sf(show.legend = TRUE) + scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE) +
-  theme_void() + scale_color_manual('white') + facet_wrap( ~ ind )
-
-ggsave('~/Documents/HCP_twin_projec/figures/Scahefer_Brain_map_power_3.pdf', device = "pdf")
-
-
-# set colour palette
-cbbPalette= c("#DBF132", "#15A705",'#4F89E0',"#D81B99",'#4d3d87','#115d80', '#FF0000')
-atlas[,35:40]= lapply(atlas[,35:40], scales::rescale)
-
-data4plot=cbind(stack(atlas[,35:40]), atlas[,5:7])
-colnames(data4plot)[4]= 'region'
-
-ggplot(data4plot, aes(values, Yeo, fill=Yeo)) + 
-  ggdist::stat_halfeye(adjust = .5, width = .1, .width = 0, justification = -.5, alpha=0.5, point_alpha= 0) + 
-  geom_boxplot(width = .3, outlier.shape = NA, colour= '#888888') + ggpubr::theme_classic2() + scale_fill_manual(values=cbbPalette) + facet_wrap(~ ind)
-
-ggsave('~/Documents/HCP_twin_projec/figures/Scahefer_box_plot_power_3.pdf', device = "pdf")
-
-
-
-########################## Schaefer atlas ICC ##########################
+########################## Schaefer atlas plot ICC ##########################
 
 atlas= read.csv('~/Desktop/Schaefer_neuromaps/Schaefer2018_200Parcels_7Networks_Neuromaps.csv')
 atlas$new_region=paste(atlas$region, atlas$Yeo, sep= '_')
@@ -183,7 +66,7 @@ atlas$gamma= rowMeans((ICC[,61:100]))
 atlas$high_gamma= rowMeans((ICC[,101:301]))
 atlas$Boradband= rowMeans((X))
 
-data4plot=cbind(stack(atlas[,36:41]), atlas[,c(1:3, 6)])
+data4plot=cbind(stack(atlas[,38:43]), atlas[,c(1:3, 6)])
 
 data4plot$values[data4plot$values<0.4] =0.4
 data4plot %>%
@@ -197,18 +80,19 @@ data4plot %>%
 
 ggsave('~/Documents/HCP_twin_projec/figures/Schaefer_ICC_narrowband.pdf', device = "pdf")
 
-
+# plot topo of broadband ICC
 atlas$Boradband[atlas$Boradband<0.6] =0.6
 atlas %>%
   brain_join(schaefer7_200) %>% 
   reposition_brain(hemi ~ side) %>% 
   ggplot(aes(fill =Boradband)) + 
-  geom_sf(show.legend = TRUE) + viridis::scale_fill_viridis(option="magma", limits=c(0.6, 0.9)) +
+  geom_sf(show.legend = TRUE) + viridis::scale_fill_viridis(option="magma", limits=c(0.6, 0.8)) +
   #scale_fill_continuous_sequential(palette= 'Sunset', rev= FALSE, limits= c(0.6,0.8)) +  scale_color_continuous_sequential(palette= 'Sunset', rev= FALSE, limits= c(0.6,1)) +
   theme_void() + scale_color_manual('white')
 
 ggsave('~/Documents/HCP_twin_projec/figures/Schaefer_ICC_broadband.pdf', device = "pdf")
 
+# now let us plot it by network 
 # set colour palette
 cbbPalette= c("#DBF132", "#15A705",'#4F89E0',"#D81B99",'#4d3d87','#115d80', '#FF0000')
 
@@ -251,7 +135,7 @@ atlas$gamma= rowMeans((ICCb[,61:100]))
 atlas$high_gamma= rowMeans((ICCb[,101:301]))
 atlas$Boradband= rowMeans((Xb))
 
-data4plot=cbind(stack(atlas[,36:41]), atlas[,c(1:3, 6)])
+data4plot=cbind(stack(atlas[,38:43]), atlas[,c(1:3, 6)])
 
 data4plot$values[data4plot$values<0.4] =0.4
 data4plot %>%
