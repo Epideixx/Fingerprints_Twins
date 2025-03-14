@@ -5,18 +5,13 @@ library(colorspace)
 library(ggsegSchaefer)
 library(ggpubr)
 
+# load in libraries and set up colours
 cbbPalette= c("#F0792C", "#f5ec6c",'#4d3d87',"#76D7C4","#268236", '#4d3d87','#593d80', '#3b49e3')
 
 
-# # # # # # # # # # # # # # # # # # # # # # #
-## plot the schaefer atlas
-## plot the Schaefer
+########################## Schaefer atlas heritability #######################################
 
-########################## Schaefer atlas PSD #######################################
-
-library(ggsegSchaefer)
 atlas= read.csv('~/Desktop/Schaefer_neuromaps/Schaefer2018_200Parcels_7Networks_Neuromaps.csv')
-
 atlas= read.csv('~/Desktop/Schaefer_neuromaps/Schaefer2018_200Parcels_7Networks_Neuromaps.csv')
 atlas$new_region=paste(atlas$region, atlas$Yeo, sep= '_')
 
@@ -24,8 +19,7 @@ H= read.csv('~/Documents/HCP_twin_projec/heritability_final.csv', header = TRUE)
 H= H[-1]
 #atlas=atlas[order(atlas$new_region),]
 
-
-# Define X and Y data
+# group data together into 6 cannonical bands
 h=data.frame(delta= rowMeans(H[,1:8]),theta= rowMeans(H[,9:16]),alpha= rowMeans(H[,17:26]),
              beta= rowMeans(H[,27:60]), gamma= rowMeans(H[,61:100]), hgamma= rowMeans(H[,101:301]))
 
@@ -65,8 +59,7 @@ diag(cor(h_p, h))
 
 
 
-
-# hcp demo
+# Read in demographics
 subj_HC= read.csv('~/Documents/HCP_twin_projec/outputs/subject_codes.csv')
 demo_twin= read.csv('~/Documents/HCP_twin_projec/ID_to_Name.csv', header = TRUE)
 
@@ -104,6 +97,7 @@ psd_1=psd_1[,-1]
 psd_2=psd_2[,-1]
 psd_3=psd_3[,-1]
 
+# define function to compute ICC
 icc <- function(df, n = 89, k = 2) {
   df_b = n-1
   df_w = n*(k-1)
@@ -159,7 +153,7 @@ broadband_1_Dz= t(scale(t(psd_1[DZ_order,])))
 broadband_2_Dz= t(scale(t(psd_2[DZ_order,])))
 broadband_3_Dz= t(scale(t(psd_3[DZ_order,])))
 
-# what about corr alpha 
+# iterate acorss all features to compute heritability 
 for( i in 1:60200){
   
   #. Monozygotic twins
@@ -172,8 +166,6 @@ for( i in 1:60200){
   df_temp= data.frame(x1= x1, x2=x2)
   output_MZ[i,1]=icc(df_temp, 9*length(twin_MZ_B), dim(df_temp)[2])
 
-
-  
   #. dizygotic twins
   x1= c(broadband_1_Dz[seq(1,22,2),i],broadband_2_Dz[seq(1,22,2),i], broadband_3_Dz[seq(1,22,2),i],
         broadband_1_Dz[seq(1,22,2),i],broadband_2_Dz[seq(1,22,2),i], broadband_1_Dz[seq(1,22,2),i],
@@ -191,7 +183,7 @@ heritability = rowMeans(2*(output_MZ-output_DZ))
 heritability_mat<- matrix(heritability, nrow = 200, byrow = TRUE)
 
 
-# Let us redo it with a subset of MZ
+# Now let us redo this process with a subsample of MZ to match the size of DZ
 temp=match(order_of_filesMZ,demo_hcp$uniqueTwinID)
 MZ_order=temp[1:22]
 twin_MZ_A= temp[seq(1,22,2)]
@@ -215,7 +207,7 @@ broadband_1_Dz= t(scale(t(psd_1[DZ_order,])))
 broadband_2_Dz= t(scale(t(psd_2[DZ_order,])))
 broadband_3_Dz= t(scale(t(psd_3[DZ_order,])))
 
-# what about corr alpha 
+# compute heritability
 for( i in 1:60200){
   
   #. Monozygotic twins
@@ -227,8 +219,6 @@ for( i in 1:60200){
         broadband_1_Mz[seq(2,22,2),i],broadband_3_Mz[seq(2,22,2),i], broadband_2_Mz[seq(2,22,2),i])
   df_temp= data.frame(x1= x1, x2=x2)
   output_MZ[i,1]=icc(df_temp, 9*length(twin_MZ_B), dim(df_temp)[2])
-  
-  
   
   #. dizygotic twins
   x1= c(broadband_1_Dz[seq(1,22,2),i],broadband_2_Dz[seq(1,22,2),i], broadband_3_Dz[seq(1,22,2),i],
@@ -246,17 +236,17 @@ for( i in 1:60200){
 heritability_sub = rowMeans(2*(output_MZ-output_DZ))
 heritability_sub<- matrix(heritability_sub, nrow = 200, byrow = TRUE)
 
-# Define X and Y data
+# group together data within 6 cannonical bands
 h=data.frame(delta= rowMeans(heritability[,1:8]),theta= rowMeans(heritability[,9:16]),alpha= rowMeans(heritability[,17:26]),
              beta= rowMeans(heritability[,27:60]), gamma= rowMeans(heritability[,61:100]), hgamma= rowMeans(heritability[,101:301]))
 
 hsub=data.frame(delta= rowMeans(heritability_sub[,1:8]),theta= rowMeans(heritability_sub[,9:16]),alpha= rowMeans(heritability_sub[,17:26]),
              beta= rowMeans(heritability_sub[,27:60]), gamma= rowMeans(heritability_sub[,61:100]), hgamma= rowMeans(heritability_sub[,101:301]))
-
+# look at correlation
 diag(cor(h, hsub))
 
-
-# permute data and run heritability 
+############################################################################
+# permute data to get heritability  p values
 # make an index of MZ twin A and Bs 
 temp=match(order_of_filesMZ,demo_hcp$uniqueTwinID)
 MZ_order=temp
@@ -271,13 +261,14 @@ twin_DZ_B= temp[seq(2,22,2)]
 heritability_perm= matrix(, nrow = 500, ncol=60200)
 heritability_perm_bands= array(0, dim=c(500,200,6))
 
-
+# run 500 permutations of the heritability estimate 
 for (iperm in 1:500){
   
   output_MZ= matrix(, nrow = 60200, ncol=1)
   output_DZ= matrix(, nrow = 60200, ncol=1)
   
   # get random perm of data
+  # permute labels of MZ and DZ PAIRS! 
   Dz_rand= sample(1:11,6)
   Mz_rand= sample(1:17,6)
   
@@ -300,7 +291,7 @@ broadband_1_Dz= t(scale(t(psd_1[DZ_order_perm,])))
 broadband_2_Dz= t(scale(t(psd_2[DZ_order_perm,])))
 broadband_3_Dz= t(scale(t(psd_3[DZ_order_perm,])))
 
-# what about corr alpha 
+# compute heritability for two new permuted labels 
 for( i in 1:60200){
   
   #. Monozygotic twins
@@ -312,8 +303,6 @@ for( i in 1:60200){
         broadband_1_Mz[seq(2,34,2),i],broadband_3_Mz[seq(2,34,2),i], broadband_2_Mz[seq(2,34,2),i])
   df_temp= data.frame(x1= x1, x2=x2)
   output_MZ[i,1]=icc(df_temp, 9*length(twin_MZ_B), dim(df_temp)[2])
-  
-  
   
   #. dizygotic twins
   x1= c(broadband_1_Dz[seq(1,22,2),i],broadband_2_Dz[seq(1,22,2),i], broadband_3_Dz[seq(1,22,2),i],
@@ -331,20 +320,20 @@ for( i in 1:60200){
 heritability_perm[iperm,] = rowMeans(2*(output_MZ-output_DZ))
 temph=matrix(heritability_perm[iperm,], nrow = 200, byrow = TRUE)
 
+# for computational efficency save only the averages within a band
 heritability_perm_bands[iperm,,]=as.matrix(data.frame(delta= rowMeans(temph[,1:8]),theta= rowMeans(temph[,9:16]),alpha= rowMeans(temph[,17:26]),
              beta= rowMeans(temph[,27:60]), gamma= rowMeans(temph[,61:100]), hgamma= rowMeans(temph[,101:301])))
 
 print(iperm)
 }
 
+# save data as csv because we worked so hard!
 write.csv(heritability_perm_bands, '/Users/jason/Documents/HCP_twin_projec/permutations_of_heritability_bands_new.csv')
-# need to compare average within narrow bands to the permted values and then compute p-value
 
 heritability_band=as.matrix(data.frame(delta= rowMeans(heritability_mat[,1:8]),theta= rowMeans(heritability_mat[,9:16]),alpha= rowMeans(heritability_mat[,17:26]),
                                                       beta= rowMeans(heritability_mat[,27:60]), gamma= rowMeans(heritability_mat[,61:100]), hgamma= rowMeans(heritability_mat[,101:301])))
 
-#heritability_perm_bands= heritability_perm_bands[1:500,,]
-
+# now compute p values by assessing if heritability is larger (one tailed test) 
 p_values= array(0, dim=c(200,6))
 for ( b in 1:6){
 p_values[,b]=apply(heritability_perm_bands[,,b] > heritability_band[,b],2,sum)/1000
@@ -352,6 +341,7 @@ p_values[,b]=apply(heritability_perm_bands[,,b] > heritability_band[,b],2,sum)/1
 
 write.csv(p_values, '/Users/jason/Documents/HCP_twin_projec/permutations_of_heritability_bands_pvalues.csv')
 
+# now let us plot result over the brain
 atlas= read.csv('~/Desktop/Schaefer_neuromaps/Schaefer2018_200Parcels_7Networks_Neuromaps.csv')
 atlas$delta_pval= p_values[,1]
 atlas$theta_pval= p_values[,2]
@@ -398,7 +388,7 @@ ggsave('~/Documents/HCP_twin_projec/figures/Review_heritability_pval_threshold_2
 
 
 
-
+# let us plot the orginal heritability estimates but thresholded by the p values 
 H= read.csv('~/Documents/HCP_twin_projec/heritability_final.csv', header = TRUE)
 H= H[-1]
 #atlas=atlas[order(atlas$new_region),]
@@ -431,14 +421,14 @@ ggsave('~/Documents/HCP_twin_projec/figures/Review_heritability_pval_threshold_3
 
 
 
-##
+########################################################################
+# as per suggestion, run permutations over the alignemnt between GO categories and ICC
 
-
+# read in ICC
 ICCb= read.csv('~/Documents/HCP_twin_projec/ICC_bootstrap_avg_total.csv', header = TRUE)
 ICCb= ICCb[-1]
-#atlas=atlas[order(atlas$new_region),]
 
-# Define X and Y data
+# average within cannonical bands
 Xb=data.frame(delta= rowMeans(ICCb[,1:8]),theta= rowMeans(ICCb[,9:16]),alpha= rowMeans(ICCb[,17:26]),
               beta= rowMeans(ICCb[,27:60]), gamma= rowMeans(ICCb[,61:100]), hgamma= rowMeans(ICCb[,101:301]))
 
@@ -465,29 +455,32 @@ GO_negative= read.csv('/Users/jason/Documents/HCP_twin_projec/abagen_analysis/ne
 
 GO_negative$pvals_permuted=1
 
-
+# fot the top negative categories 
 for (g in 1:35){
-list_temp=unique(unlist(strsplit(GO_negative$Genes[g], split = " ")))
-colnums2Avg=which(colnames(gene_expression) %in% list_temp)
-gene_express_obs= rowMeans(gene_expression[,colnums2Avg])
+  # get the avg gene expression across cortex (spatial map) for these genes GO
+  list_temp=unique(unlist(strsplit(GO_negative$Genes[g], split = " "))) 
+  colnums2Avg=which(colnames(gene_expression) %in% list_temp)
+  gene_express_obs= rowMeans(gene_expression[,colnums2Avg])
 
-orig=cor(gene_express_obs, rowMeans(Xb[,-2]))
-permuted_corr=c()
-for (i in 1:1001){
-  
-  cor_temp=cor.test(rowMeans(Xb[permuted_index[,i],-2]), gene_express_obs)
-  permuted_corr= c(permuted_corr, cor_temp$estimate)
-  
+  # get the obsered correlation
+  orig=cor(gene_express_obs, rowMeans(Xb[,-2]))
+  # run permutations based on the SPIN tests
+  permuted_corr=c()
+    for (i in 1:1001){
+      
+      cor_temp=cor.test(rowMeans(Xb[permuted_index[,i],-2]), gene_express_obs)
+      permuted_corr= c(permuted_corr, cor_temp$estimate)
+      
+    }
+
+  # see if the observed alignemnt between the GO category is greater than the SPINS
+  # note one tailed test here since we know the direction of the effect already (i.e., negative)
+  GO_negative$pvals_permuted[g]=(sum(orig > permuted_corr)+1)/1001
 }
 
-GO_negative$pvals_permuted[g]=(sum(orig > permuted_corr)+1)/1001
-}
-
-
+# rinse and repeat for the positive genes 
 GO_positive= read.csv('/Users/jason/Documents/HCP_twin_projec/abagen_analysis/positive_top_GO_biological_process_terms.csv')
 GO_positive$pvals_permuted=1
-
-# for loo here
 
 for (g in 1:35){
   list_temp=unique(unlist(strsplit(GO_positive$Genes[g], split = " ")))
@@ -506,6 +499,7 @@ for (g in 1:35){
   GO_positive$pvals_permuted[g]=(sum(orig < permuted_corr)+1)/1001
 }
 
+# now that we have the pvalues let us plot the effects and make it pretty 
 
 GO_negative$Pathway = factor(GO_negative$Pathway, levels = GO_negative$Pathway[order(GO_negative$FoldEnrichment)])
 
@@ -526,10 +520,11 @@ ggsave('~/Documents/HCP_twin_projec/figures/positivegenesTop_reviewer.pdf', devi
 
 
 
+##################################################################
+# plots of self- other- and twin- similarity of brain profiles 
+# do this for the broadband data
 
 # need to compute histogram of within and between corrs of subject 
-# try out new gene ontology analysis 
-
 
 corr_psd=cor(t(psd_1),t(psd_2)) 
 demo_hcp$psd_self_corr12=diag(corr_psd)
@@ -691,16 +686,5 @@ ggplot(data4plot3, aes(DescTools::FisherZ(values), color= group, fill=group, alp
 ggsave('~/Documents/HCP_twin_projec/figures/Review_hist_other_corr_broadband_all_data.pdf', device = "pdf")
 
 
-data4plot= data.frame(values= c(corss_corrs_MZ_12, corss_corrs_MZ_23, corss_corrs_MZ_13, 
-                                corss_corrs_DZ_12, corss_corrs_DZ_23, corss_corrs_DZ_13),
-                      group= c(rep('MZ', 17*3), rep('DZ', 11*3)))
-
-mean(DescTools::FisherZ(data4plot$values[data4plot$group == "MZ"]))
-sd(DescTools::FisherZ(data4plot$values[data4plot$group == "MZ"]))
-mean(DescTools::FisherZ(data4plot$values[data4plot$group == "DZ"]))
-sd(DescTools::FisherZ(data4plot$values[data4plot$group == "DZ"]))
-
-mean(DescTools::FisherZ(c(demo_hcp$psd_self_corr12, demo_hcp$psd_self_corr21, demo_hcp$psd_self_corr13)))
-sd(DescTools::FisherZ(c(demo_hcp$psd_self_corr12, demo_hcp$psd_self_corr21, demo_hcp$psd_self_corr13)))
 
 
