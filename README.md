@@ -20,7 +20,7 @@ All of those steps are merged together in main.py
 
 Statistical analyses and plots were performed : plots_Schaefer.R
 
-We additionally ran a PLS analysis to relate salient features for participant differentiation (ICC) to gene expression from the [AHBA](https://human.brain-map.org) (see XXXXXX and [Hansen et al 2021](https://github.com/netneurolab/hansen_genescognition). Code for the PLS analysis can be found in the PLS_Code folder.
+We additionally ran a PLS analysis to relate salient features for participant differentiation (ICC) to gene expression from the [AHBA](https://human.brain-map.org) (see [Hansen et al 2021](https://github.com/netneurolab/hansen_genescognition). Code for the PLS analysis can be found in the PLS_Code folder.
 
 
 ## Results
