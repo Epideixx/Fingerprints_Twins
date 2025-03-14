@@ -33,7 +33,7 @@ In short we found that:
 
 ## Manuscript and Citation
 
-This work is presented in XXXXX. Please cite XXXXX
+This work on [bioRxiv](https://www.biorxiv.org/content/10.1101/2024.07.19.604292v1). Please cite da Silva Castanheira et al., 2024. If you have any questions please contact the authors of the paper.
 
 ## How to use this repository
 
@@ -42,8 +42,8 @@ In addition to the provided data on this github repository, you will require :
 - to download the "Schaefer_30_second" folder if you want to run the analysis using the short segments and to upload it in "Data
 - to download the "Schaefer_artifacts_correction" folder if you want to run the analysis using the PSDs after regressing out the artifacts
 
-
-All the results to conduct the ananlyses can be computed  using **main.py** :
+Note scripts for our PLS analyses can be found in the PLS codes folder. R scripts provide useful plotting functions for data visualization.
+All the results to conduct the brain-fingerprinting ananlyses can be computed  using **main.py** :
 
 Example :
 ```console
